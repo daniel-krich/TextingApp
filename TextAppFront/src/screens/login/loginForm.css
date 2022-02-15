@@ -1,0 +1,10 @@
+.loginBox {
+    max-width: 500px;
+    border: 1px solid #212121cc;
+    border-radius: 5px;
+    padding: 30px;
+}
+
+.loginHeaderRow {
+    min-height: 250px;
+}
