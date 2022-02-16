@@ -1,7 +1,7 @@
 ﻿using MongoDB.Driver;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TextAppData.DataModels;
+using TextAppData.DataEntities;
 
 namespace TextAppData.DataContext
 {
@@ -15,5 +15,6 @@ namespace TextAppData.DataContext
         Task<List<TDocument>> FetchDBRefAsAsync<TDocument>(IList<MongoDBRef> dbRefs);
         Task<UserEntity> TryGetUserEntityBySessionToken(string token);
         Task<UserEntity> TryGetUserEntityByCredentials(string username, string password);
+        Task<UserEntity> TryGetUserEntityByUsername(string username);
     }
 }

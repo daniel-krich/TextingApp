@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
-using TextAppData.DataModels;
+using TextAppData.DataEntities;
 
 namespace TextAppData.DataContext
 {
@@ -34,17 +34,21 @@ namespace TextAppData.DataContext
             bool createUsersIndexes = !await (await GetUserCollection().Indexes.ListAsync()).AnyAsync();
             if(createUsersIndexes) // Create unique indexes only if they doesn't exist
             {
-                var indexUsername = new CreateIndexModel<UserEntity>(Builders<UserEntity>.IndexKeys.Ascending(x => x.Username), new CreateIndexOptions<UserEntity>() { Unique=true });
-                var indexEmail = new CreateIndexModel<UserEntity>(Builders<UserEntity>.IndexKeys.Ascending(x => x.Email), new CreateIndexOptions<UserEntity>() { Unique = true });
+                var indexUsername = new CreateIndexModel<UserEntity>(Builders<UserEntity>.IndexKeys.Ascending(x => x.Username), new CreateIndexOptions<UserEntity>() { Collation = new Collation(locale: "en", strength: CollationStrength.Secondary), Unique=true });
+                var indexEmail = new CreateIndexModel<UserEntity>(Builders<UserEntity>.IndexKeys.Ascending(x => x.Email), new CreateIndexOptions<UserEntity>() { Collation = new Collation(locale: "en", strength: CollationStrength.Secondary), Unique = true });
+                var indexPassword = new CreateIndexModel<UserEntity>(Builders<UserEntity>.IndexKeys.Ascending(x => x.Password), new CreateIndexOptions<UserEntity>() { Collation = new Collation(locale: "en", strength: CollationStrength.Secondary) });
+                //case insensitive + unique
                 await GetUserCollection().Indexes.CreateOneAsync(indexUsername);
                 await GetUserCollection().Indexes.CreateOneAsync(indexEmail);
+                //case insensitive
+                await GetUserCollection().Indexes.CreateOneAsync(indexPassword);
                 //Trace.WriteLine("Created default indexes");
             }
 
             bool createSessionIndexes = !await (await GetSessionCollection().Indexes.ListAsync()).AnyAsync();
             if (createSessionIndexes) // Create unique indexes only if they doesn't exist
             {
-                var indexUniqueToken = new CreateIndexModel<SessionEntity>(Builders<SessionEntity>.IndexKeys.Ascending(x => x.Token), new CreateIndexOptions<SessionEntity>() { Unique = true });
+                var indexUniqueToken = new CreateIndexModel<SessionEntity>(Builders<SessionEntity>.IndexKeys.Ascending(x => x.Token), new CreateIndexOptions<SessionEntity>() { Collation = new Collation(locale: "en", strength: CollationStrength.Secondary), Unique = true });
                 var indexKeysExpire = Builders<SessionEntity>.IndexKeys.Ascending(o => o.ExpiresAt);
                 var indexOptions = new CreateIndexOptions {  ExpireAfter = new TimeSpan(days: 14, 0,0,0) };
                 var indexModel = new CreateIndexModel<SessionEntity>(indexKeysExpire, indexOptions);
@@ -118,6 +122,15 @@ namespace TextAppData.DataContext
         public async Task<UserEntity> TryGetUserEntityByCredentials(string username, string password)
         {
             var res = await GetUserCollection().FindAsync(o => o.Username == username && o.Password == password);
+            if (await res.FirstOrDefaultAsync() is UserEntity model)
+                return model;
+            else
+                return null;
+        }
+
+        public async Task<UserEntity> TryGetUserEntityByUsername(string username)
+        {
+            var res = await GetUserCollection().FindAsync(o => o.Username == username);
             if (await res.FirstOrDefaultAsync() is UserEntity model)
                 return model;
             else

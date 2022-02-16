@@ -9,7 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TextAppData.Converters;
 using TextAppData.DataContext;
-using TextAppData.DataModels;
+using TextAppData.DataEntities;
 using TextAppData.Helpers;
 using TextAppData.Models;
 using TextAppData.ResponseModels;

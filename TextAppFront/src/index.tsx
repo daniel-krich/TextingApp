@@ -4,10 +4,12 @@ import './index.css';
 import reportWebVitals from './reportWebVitals';
 import { GlobalContextProvider } from './services';
 import ContentRouter from './router';
+import { Loading } from './screens';
 
 ReactDOM.render(
   <React.StrictMode>
     <GlobalContextProvider>
+        <Loading />
         <ContentRouter />
     </GlobalContextProvider>
   </React.StrictMode>,

@@ -3,10 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { Container, Navbar, Nav, NavDropdown } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useGlobalStore } from '../../services';
+import { TokenStore } from '../../services';
 
 export function NavBar() {
     const navigation = useNavigate();
     const globalStore = useGlobalStore();
+    const logout = () => {
+        TokenStore.clearTokens();
+        window.location.assign('/');
+    };
     return (
         <Navbar collapseOnSelect expand="lg" bg="dark" variant="dark">
             <Container>
@@ -33,7 +38,7 @@ export function NavBar() {
                                 <NavDropdown.Item onClick={() => navigation('/myaccount')}>My account</NavDropdown.Item>
                                 <NavDropdown.Item onClick={() => navigation('/settings')}>Settings</NavDropdown.Item>
                                 <NavDropdown.Divider />
-                                <NavDropdown.Item onClick={() => navigation('/')}>Log out</NavDropdown.Item>
+                                <NavDropdown.Item onClick={() => logout()}>Log out</NavDropdown.Item>
                             </NavDropdown>
                         </>
                         :

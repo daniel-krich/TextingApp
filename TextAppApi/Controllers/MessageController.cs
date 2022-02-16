@@ -9,7 +9,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using TextAppApi.Core;
 using TextAppData.DataContext;
-using TextAppData.DataModels;
+using TextAppData.DataEntities;
+using TextAppData.Enums;
 using TextAppData.Models;
 using TextAppData.ResponseModels;
 
@@ -34,43 +35,95 @@ namespace TextAppApi.Controllers
             {
                 if (message.ChatId.Length > 0)
                 {
-                    var associatedChat = await _dbContext.GetChatCollection().FindAsync(o => o.Id == new ObjectId(message.ChatId) && o.Participants.Contains(DbRefFactory.UserRef(user.Id)));
-                    if (await associatedChat.FirstOrDefaultAsync() is ChatEntity chat)
+                    if (message.TypeChat == ChatType.Regular)
                     {
-                        MessageEntity currentMessage = new MessageEntity
+                        var finduser = await _dbContext.TryGetUserEntityByUsername(message.ChatId);
+                        if (finduser is UserEntity founduser)
                         {
-                            Sender = DbRefFactory.UserRef(user.Id),
-                            Time = DateTime.Now,
-                            Message = message.Message
-                        };
-                        await _dbContext.GetMessageCollection().InsertOneAsync(currentMessage);
-                        await _dbContext.GetChatCollection().UpdateOneAsync(c => c.Id == chat.Id,
-                            Builders<ChatEntity>.Update.AddToSet(o => o.Messages, DbRefFactory.MessageRef(currentMessage.Id)));
-                        LongPolling<MessageEvent>.CallEvent( new MessageEvent { Message = currentMessage, Chat = chat });
-                        return new ResponseModel("Success", "Message sent successfully").ToString();
+                            var associatedChat = await _dbContext.GetChatCollection().FindAsync(o => o.Type == ChatType.Regular && 
+                                                                    o.Participants.Contains(DbRefFactory.UserRef(founduser.Id)) &&
+                                                                    o.Participants.Contains(DbRefFactory.UserRef(user.Id)));
+                            if (await associatedChat.FirstOrDefaultAsync() is ChatEntity chat)
+                            {
+                                MessageEntity currentMessage = new MessageEntity
+                                {
+                                    Sender = DbRefFactory.UserRef(user.Id),
+                                    Time = DateTime.Now,
+                                    Message = message.Message
+                                };
+                                await _dbContext.GetMessageCollection().InsertOneAsync(currentMessage);
+                                await _dbContext.GetChatCollection().UpdateOneAsync(c => c.Id == chat.Id,
+                                    Builders<ChatEntity>.Update.AddToSet(o => o.Messages, DbRefFactory.MessageRef(currentMessage.Id)));
+                                LongPolling<MessageEvent>.CallEvent(new MessageEvent { Message = currentMessage, Chat = chat });
+                                return new ResponseModel("Success", "Message sent successfully").ToString();
+                            }
+                            else
+                            {
+                                MessageEntity currentMessage = new MessageEntity
+                                {
+                                    Sender = DbRefFactory.UserRef(user.Id),
+                                    Time = DateTime.Now,
+                                    Message = message.Message
+                                };
+                                ChatEntity currentChat = new ChatEntity
+                                {
+                                    Participants = new List<MongoDBRef>() { DbRefFactory.UserRef(user.Id), DbRefFactory.UserRef(founduser.Id) },
+                                    Messages = new List<MongoDBRef>() { DbRefFactory.MessageRef(currentMessage.Id) }
+                                };
+                                await _dbContext.GetMessageCollection().InsertOneAsync(currentMessage);
+                                await _dbContext.GetChatCollection().InsertOneAsync(currentChat);
+                                LongPolling<MessageEvent>.CallEvent(new MessageEvent { Message = currentMessage, Chat = currentChat });
+                                return new ResponseModel("Success", "New chat has been created, message sent successfully").ToString();
+                            }
+                        }
+                        else
+                        {
+                            return new ResponseModel(21, "Message error", "Couldn't find chat or user to send to.").ToString();
+                        }
+                    }
+                    else if(message.TypeChat == ChatType.Group)
+                    {
+                        try
+                        {
+                            ulong GroupId = Convert.ToUInt64(message.ChatId);
+                            var associatedChat = await _dbContext.GetChatCollection().FindAsync(c => c.GroupId == GroupId &&
+                                                                          c.Participants.Contains(DbRefFactory.UserRef(user.Id)));
+                            if (await associatedChat.FirstOrDefaultAsync() is ChatEntity chat)
+                            {
+                                MessageEntity currentMessage = new MessageEntity
+                                {
+                                    Sender = DbRefFactory.UserRef(user.Id),
+                                    Time = DateTime.Now,
+                                    Message = message.Message
+                                };
+                                await _dbContext.GetMessageCollection().InsertOneAsync(currentMessage);
+                                await _dbContext.GetChatCollection().UpdateOneAsync(c => c.Id == chat.Id,
+                                    Builders<ChatEntity>.Update.AddToSet(o => o.Messages, DbRefFactory.MessageRef(currentMessage.Id)));
+                                LongPolling<MessageEvent>.CallEvent(new MessageEvent { Message = currentMessage, Chat = chat });
+                                return new ResponseModel("Success", "Message sent successfully").ToString();
+                            }
+                            else
+                            {
+                                return new ResponseModel(24, "Message error", "Couldn't find chat or user to send to.").ToString();
+                            }
+                        }
+                        catch(OverflowException)
+                        {
+                            return new ResponseModel(22, "Id error", "Provided invalid Id").ToString();
+                        }
+                        catch(FormatException)
+                        {
+                            return new ResponseModel(23, "Id error", "Provided invalid Id").ToString();
+                        }
                     }
                     else
                     {
-                        return new ResponseModel(20, "Message error", "Chat not found").ToString();
+                        return new ResponseModel(21, "Message error", "Couldn't find chat or user to send to.").ToString();
                     }
                 }
                 else
                 {
-                    MessageEntity currentMessage = new MessageEntity
-                    {
-                        Sender = DbRefFactory.UserRef(user.Id),
-                        Time = DateTime.Now,
-                        Message = message.Message
-                    };
-                    ChatEntity currentChat = new ChatEntity
-                    {
-                        Participants = new List<MongoDBRef>() { DbRefFactory.UserRef(user.Id) },
-                        Messages = new List<MongoDBRef>() { DbRefFactory.MessageRef(currentMessage.Id) }
-                    };
-                    await _dbContext.GetMessageCollection().InsertOneAsync(currentMessage);
-                    await _dbContext.GetChatCollection().InsertOneAsync(currentChat);
-                    LongPolling<MessageEvent>.CallEvent(new MessageEvent { Message = currentMessage, Chat = currentChat });
-                    return new ResponseModel("Success", "New chat has been created, message sent successfully").ToString();
+                    return new ResponseModel(23, "Id error", "Provided invalid Id").ToString();
                 }
             }
             else

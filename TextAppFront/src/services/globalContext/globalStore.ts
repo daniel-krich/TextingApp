@@ -1,14 +1,18 @@
 import Auth from "../auth";
-import { makeAutoObservable, observable, computed, action, flow } from "mobx"
+import { makeAutoObservable, observable, computed, action, flow, runInAction } from "mobx";
 
 export class GlobalStore {
-    authService: Auth;
-    clickme: number = 0;
+    authService: Auth = new Auth();
+    isAppLoaded: boolean = false;
     constructor(){
-        //Instantiate new services here
-        this.authService = new Auth();
-        //
         makeAutoObservable(this);
+
+        (async () => {
+            console.log("loading func");
+            await this.authService.accountLoginToken();
+            await new Promise(r => setTimeout(r, 500));
+
+        })().then(_ => runInAction(() => this.isAppLoaded = true));
     }
 }
 

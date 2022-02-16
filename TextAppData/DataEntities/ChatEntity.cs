@@ -8,16 +8,19 @@ using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using Newtonsoft.Json;
 using TextAppData.DataContext;
+using TextAppData.Enums;
 
-namespace TextAppData.DataModels
+namespace TextAppData.DataEntities
 {
-    public class MessageEntity
+    public class ChatEntity
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public ObjectId Id { get; set; }
-        public MongoDBRef Sender { get; set; }
-        public DateTime Time { get; set; }
-        public string Message { get; set; }
+        public string Name { get; set; }
+        public ulong GroupId { get; set; }
+        public ChatType Type { get; set; }
+        public IList<MongoDBRef> Participants { get; set; }
+        public IList<MongoDBRef> Messages { get; set; }
     }
 }

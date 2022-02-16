@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TextAppData.DataContext;
-using TextAppData.DataModels;
+using TextAppData.DataEntities;
 
 namespace TextAppData.Helpers
 {

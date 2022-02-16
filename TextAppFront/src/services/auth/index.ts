@@ -1,34 +1,52 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import React from 'react';
-import { Ajax } from '../'
+import { Ajax, TokenStore } from '../'
 
-interface LoginForm{
-    Username: string,
-    Password: string
+interface LoginResponse {
+    Token: string
 }
 
-interface Account{
-    Id: number,
+interface LoginTokenResponse {
     Username: string,
     Email: string,
-    Description: string,
-    Age: number
+    FirstName: string,
+    LastName: string
 }
 
 class Auth {
-    account: Account;
+    account: LoginTokenResponse;
     constructor(){
-        this.account = {} as Account;
+        this.account = {} as LoginTokenResponse;
         makeAutoObservable(this);
     }
 
-    async accountLogin(login: LoginForm) {
-        const json = await (await Ajax.Post("http://127.0.0.1:3001/api/login", login)).json();
-        runInAction(() => this.account = json as Account);
+    async accountLogin(username: string, password: string): Promise<boolean> {
+        const json = await (await Ajax.Post("https://localhost:44310/api/user/signin", {
+            Username: username,
+            Password: password
+        })).json() as LoginResponse;
+        if(json.Token != null)
+        {
+            TokenStore.token = json.Token;
+            return true;
+        }
+        return false;
+    }
+
+    async accountLoginToken() {
+        if(TokenStore.token != null && TokenStore.token != undefined && this.isLogged == false)
+        {
+            var res = await (await Ajax.Post("https://localhost:44310/api/user/auth_token", { Token: TokenStore.token })).json() as LoginTokenResponse;
+            runInAction(() => this.account = res);
+            if(!this.isLogged)
+            {
+                TokenStore.clearTokens();
+            }
+        }
     }
 
     get isLogged(): boolean{
-        if(this.account != null && this.account.Id > 0) return true;
+        if(this.account != null && this.account.Username?.length > 0) return true;
         return false;
     }
 }

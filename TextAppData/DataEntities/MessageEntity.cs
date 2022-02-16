@@ -9,14 +9,15 @@ using MongoDB.Driver;
 using Newtonsoft.Json;
 using TextAppData.DataContext;
 
-namespace TextAppData.DataModels
+namespace TextAppData.DataEntities
 {
-    public class ChatEntity
+    public class MessageEntity
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public ObjectId Id { get; set; }
-        public IList<MongoDBRef> Participants { get; set; }
-        public IList<MongoDBRef> Messages { get; set; }
+        public MongoDBRef Sender { get; set; }
+        public DateTime Time { get; set; }
+        public string Message { get; set; }
     }
 }

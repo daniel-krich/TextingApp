@@ -7,7 +7,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
 
-namespace TextAppData.DataModels
+namespace TextAppData.DataEntities
 {
     public class UserEntity
     {

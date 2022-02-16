@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TextAppData.DataContext;
 
-namespace TextAppData.DataModels
+namespace TextAppData.DataEntities
 {
     public class SessionEntity
     {

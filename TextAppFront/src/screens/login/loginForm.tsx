@@ -13,14 +13,13 @@ function LoginFormComp() {
     const globalStore = useGlobalStore();
     const login = async (evt: React.FormEvent) => {
         evt.preventDefault();
-        await globalStore.authService.accountLogin(loginModel);
-        if(globalStore.authService.isLogged)
+        if(await globalStore.authService.accountLogin(loginModel.Username, loginModel.Password))
         {
-            navigate('/');
+            window.location.assign('/');
         }
         else
         {
-            loginModel.ErrorText = "Invalid username or password";
+            runInAction(() => loginModel.ErrorText = "Invalid username or password");
         }
     };
     return (
