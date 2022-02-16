@@ -12,6 +12,7 @@ using TextAppData.DataContext;
 using TextAppData.DataModels;
 using TextAppData.Helpers;
 using TextAppData.Models;
+using TextAppData.ResponseModels;
 
 namespace TextAppApi.Controllers
 {
@@ -31,11 +32,11 @@ namespace TextAppApi.Controllers
             var res = await _dbContext.TryGetUserEntityBySessionToken(user.Token);
             if (res is UserEntity model)
             {
-                return JsonConvert.SerializeObject(model);
+                return ModelConverter.Convert<AuthWithTokenResponseModel>(model).ToString();
             }
             else
             {
-                return "invalid token";
+                return new ResponseModel(1, "Authentication error", "Invalid token").ToString();
             }
         }
 
@@ -46,11 +47,11 @@ namespace TextAppApi.Controllers
             if (res is UserEntity model)
             {
                 var token = await DbHelper.CreateRandomSessionToken(_dbContext.GetSessionCollection(), model, 60);
-                return JsonConvert.SerializeObject(model);
+                return new AuthResponseModel { Token = token }.ToString();
             }
             else
             {
-                return "not found";
+                return new ResponseModel(1, "Authentication error", "Invalid username or password").ToString();
             }
         }
 
@@ -61,11 +62,11 @@ namespace TextAppApi.Controllers
             try
             {
                 await _dbContext.GetUserCollection().InsertOneAsync(ModelConverter.Convert<UserEntity>(user));
-                return "Success";
+                return new ResponseModel("Success", "Account has been created").ToString();
             }
-            catch(MongoWriteException err)
+            catch(MongoWriteException)
             {
-                return err.Message;
+                return new ResponseModel(2, "Signup error", "Couldn't insert a new account, some of the data exists already.").ToString();
             }
         }
     }

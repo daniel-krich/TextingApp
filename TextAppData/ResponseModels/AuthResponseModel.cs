@@ -7,11 +7,9 @@ using System.Threading.Tasks;
 
 namespace TextAppData.ResponseModels
 {
-    public class UserResponseModel
+    public class AuthResponseModel
     {
-        public string Username { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
+        public string Token { get; set; }
 
         public override string ToString()
         {

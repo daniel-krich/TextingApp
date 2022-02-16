@@ -15,7 +15,7 @@ namespace TextAppApi.Core
         private int _delaytimeout;
         private TaskCompletionSource<bool> _taskCompletion;
 
-        public LongPolling(Predicate<T> predicate, int delay)
+        public LongPolling(Predicate<T> predicate, int delay = 30000)
         {
             _predicate = predicate;
             _delaytimeout = delay;
