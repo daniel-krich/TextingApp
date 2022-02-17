@@ -65,12 +65,12 @@ namespace TextAppApi.Controllers
                                     Time = DateTime.Now,
                                     Message = message.Message
                                 };
+                                await _dbContext.GetMessageCollection().InsertOneAsync(currentMessage); // insert first, then we can use the ref with the id.
                                 ChatEntity currentChat = new ChatEntity
                                 {
                                     Participants = new List<MongoDBRef>() { DbRefFactory.UserRef(user.Id), DbRefFactory.UserRef(founduser.Id) },
                                     Messages = new List<MongoDBRef>() { DbRefFactory.MessageRef(currentMessage.Id) }
                                 };
-                                await _dbContext.GetMessageCollection().InsertOneAsync(currentMessage);
                                 await _dbContext.GetChatCollection().InsertOneAsync(currentChat);
                                 LongPolling<MessageEvent>.CallEvent(new MessageEvent { Message = currentMessage, Chat = currentChat });
                                 return new ResponseModel("Success", "New chat has been created, message sent successfully").ToString();

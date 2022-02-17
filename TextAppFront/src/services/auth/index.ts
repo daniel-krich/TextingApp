@@ -13,7 +13,7 @@ interface LoginTokenResponse {
     LastName: string
 }
 
-class Auth {
+export class Auth {
     account: LoginTokenResponse;
     constructor(){
         this.account = {} as LoginTokenResponse;
@@ -50,5 +50,3 @@ class Auth {
         return false;
     }
 }
-
-export default Auth;

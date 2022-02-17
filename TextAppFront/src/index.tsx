@@ -9,8 +9,9 @@ import { Loading } from './screens';
 ReactDOM.render(
   <React.StrictMode>
     <GlobalContextProvider>
-        <Loading />
-        <ContentRouter />
+        <Loading>
+            <ContentRouter />
+        </Loading>
     </GlobalContextProvider>
   </React.StrictMode>,
   document.getElementById('root')

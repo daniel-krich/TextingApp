@@ -1,3 +1,3 @@
-export { Ajax } from './ajax';
-export { GlobalContextProvider, useGlobalStore } from './globalContext';
-export { TokenStore } from './storage/token';
+export * from './ajax';
+export * from './globalContext';
+export * from './storage/token';
