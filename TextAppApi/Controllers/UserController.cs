@@ -68,6 +68,10 @@ namespace TextAppApi.Controllers
             {
                 return new ResponseModel(2, "Signup error", "Couldn't insert a new account, some of the data exists already.").ToString();
             }
+            catch(Exception)
+            {
+                return new ResponseModel(0, "Unknown error", "Error occured on create user.").ToString();
+            }
         }
     }
 }

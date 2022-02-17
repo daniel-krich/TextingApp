@@ -115,6 +115,10 @@ namespace TextAppApi.Controllers
                         {
                             return new ResponseModel(23, "Id error", "Provided invalid Id").ToString();
                         }
+                        catch(Exception)
+                        {
+                            return new ResponseModel(0, "Unknown error", "Error occured on push message.").ToString();
+                        }
                     }
                     else
                     {
