@@ -149,7 +149,52 @@ namespace TextAppApi.Controllers
                     MessageEvent messageEvent = await eventPolling.ResolveEvent();
                     if (messageEvent is not null)
                     {
-                        await Response.WriteAsync($"data: {messageEvent.Message.Message}\n\n");
+                        // Create output json with last message and sender basic info
+                        var userFromRef_unsafe = await _dbContext.FetchDBRefAsAsync<UserEntity>(messageEvent.Message.Sender); // contains passwords etc!
+                        UserResponseModel userResponse = new UserResponseModel
+                        {
+                            Username = userFromRef_unsafe.Username,
+                            FirstName = userFromRef_unsafe.FirstName,
+                            LastName = userFromRef_unsafe.LastName
+                        };
+                        MessageResponseModel message = new MessageResponseModel
+                        {
+                            Sender = userResponse,
+                            Time = messageEvent.Message.Time,
+                            Message = messageEvent.Message.Message
+                        };
+                        //
+
+                        // Create output json list with participants basic information
+                        var participants_unsafe = await _dbContext.FetchDBRefAsAsync<UserEntity>(messageEvent.Chat.Participants); // contains passwords etc!
+                        List<UserResponseModel> participants_filtered = new List<UserResponseModel>();
+                        foreach (UserEntity userCurr in participants_unsafe)
+                        {
+                            participants_filtered.Add(new UserResponseModel
+                            {
+                                Username = userCurr.Username,
+                                FirstName = userCurr.FirstName,
+                                LastName = userCurr.LastName
+                            });
+                        }
+                        //
+
+                        // Combine information from last message and the participants and add it to the list
+
+                        string chatId = messageEvent.Chat.Type == ChatType.Regular ?
+                            (from part in participants_filtered
+                             where part.Username != user.Username
+                             select part).FirstOrDefault()?.Username : messageEvent.Chat.GroupId.ToString();
+
+                        ChatResponseModel responseChat = new ChatResponseModel
+                        {
+                            ChatId = chatId ?? user.Username, // if chatId is null, the user sent the message to himself.
+                            Name = messageEvent.Chat.Name,
+                            Type = messageEvent.Chat.Type,
+                            Participants = participants_filtered,
+                            LastMessage = message
+                        };
+                        await Response.WriteAsync($"data: {responseChat}\n\n");
                     }
                 } while (!Request.HttpContext.RequestAborted.IsCancellationRequested);
             }

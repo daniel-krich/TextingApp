@@ -15,7 +15,7 @@ namespace TextAppApi.Core
         private int _delaytimeout;
         private TaskCompletionSource<bool> _taskCompletion;
 
-        public LongPolling(Predicate<T> predicate, int delay = 30000)
+        public LongPolling(Predicate<T> predicate, int delay = 15000)
         {
             _predicate = predicate;
             _delaytimeout = delay;
@@ -51,7 +51,7 @@ namespace TextAppApi.Core
         {
             lock(LongPollingQueue)
             {
-                for(int i = 0; i < LongPollingQueue.Count; i++)
+                for(int i = LongPollingQueue.Count - 1; i >= 0; i--) // start from the end, otherwise only one event will be called all the time.
                 {
                     if (LongPollingQueue[i] is LongPolling<T>)
                     {

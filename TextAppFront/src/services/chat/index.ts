@@ -35,6 +35,24 @@ export class Chat {
 
     async loadChats() {
         var res = await (await Ajax.Post("https://localhost:44310/api/chat", { Token: TokenStore.token })).json() as ChatStruct[];
-        runInAction(() => this.chatHistory = res);
+        await runInAction(() => this.chatHistory = res);
+        //
+        var handleMessages = new EventSource('https://localhost:44310/api/Message/pull/' + TokenStore.token);
+        handleMessages.onmessage = (e) => this.handleMessages(e);
+    }
+
+    handleMessages(e: MessageEvent) {
+        const ChatData = JSON.parse(e.data) as ChatStruct;
+        console.log(ChatData);
+        console.log(this.chatHistory);
+        const ChatIndex = this.chatHistory.findIndex(o => o.ChatId == ChatData.ChatId);
+        if(ChatIndex >= 0)
+        {
+            runInAction(() => this.chatHistory[ChatIndex] = ChatData);
+        }
+        else
+        {
+            runInAction(() => this.chatHistory.push(ChatData));
+        }
     }
 }
