@@ -8,13 +8,13 @@ using TextAppData.Enums;
 
 namespace TextAppData.Models
 {
-    public class PushMessageModel : TokenLoginModel
+    public class GetChatMessagesModel : TokenLoginModel
     {
         [Required]
         public string ChatId { get; set; }
         [Required]
         public ChatType TypeChat { get; set; }
         [Required]
-        public string Message { get; set; }
+        public int MessageOffset { get; set; }
     }
 }

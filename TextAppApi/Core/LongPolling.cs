@@ -56,7 +56,7 @@ namespace TextAppApi.Core
                     if (LongPollingQueue[i] is LongPolling<T>)
                     {
                         LongPollingQueue[i].CallEventResolve(long_event);
-                        Trace.WriteLine("Resolving event ok...");
+                        //Trace.WriteLine("Resolving event ok...");
                     }
                 }
             }

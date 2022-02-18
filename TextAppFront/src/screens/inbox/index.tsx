@@ -19,7 +19,7 @@ export function Inbox() {
                     <Col sm={12}>
                         {
                             chatIdParam.length > 0 ?
-                            <Chat/> : <ChatHistory/>
+                            <Chat chatId={chatIdParam}/> : <ChatHistory/>
 
                         }
                     </Col>

@@ -6,28 +6,27 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './chat.css';
 import { useGlobalStore } from '../../services';
 import { runInAction } from 'mobx';
+import { ChatType } from '../../services/chat';
 
 export const ChatHistory = observer(() => {
     const navigate = useNavigate();
     const chatService = useGlobalStore().chatService;
     useEffect(() => {
-        runInAction(() => chatService.chatHistory = chatService.chatHistory.sort((a,b) => a.LastMessage.Time.getTime() - b.LastMessage.Time.getTime()));
+        runInAction(() => chatService.chatHistory = chatService.chatHistory.sort((a,b) => new Date(b.LastMessage.Time).getTime() - new Date(a.LastMessage.Time).getTime()));
     },[chatService.chatHistory]);
     return (
         <>
             <Row className='p-3'>
-                <h5 className='text-center display-4 text-white'>Your chats</h5>
+                <h5 className='text-center display-4 text-black'>Your chats</h5>
             </Row>
             <ListGroup className='chat-history' as="ol">
                 {chatService.chatHistory.map((chat, index) =>
                     <ListGroup.Item role="button" key={index} onClick={() => navigate({ search: '?chat=' + chat.ChatId })} as="li" className="d-flex justify-content-between align-items-start">
                     <div className="ms-2 me-auto">
-                    <div className="fw-bold">{chat.LastMessage.Sender.Username}</div>
-                    {chat.LastMessage.Message}
+                    <div className="fw-bold">{chat.Type == ChatType.Regular ? chat.ChatId : chat.Name}</div>
+                    {chat.LastMessage.Sender.FirstName} {chat.LastMessage.Sender.LastName}: {chat.LastMessage.Message}
                     </div>
-                    <Badge bg="primary" pill>
-                    1
-                    </Badge>
+                    <Badge bg="primary" pill></Badge>
                     </ListGroup.Item>
                 )}
             </ListGroup>
