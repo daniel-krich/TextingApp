@@ -6,7 +6,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './chat.css';
 import { useGlobalStore } from '../../services';
 import { runInAction } from 'mobx';
-import { ChatType } from '../../services/chat';
+import { ChatType } from '../../services';
 
 export const ChatHistory = observer(() => {
     const navigate = useNavigate();
@@ -20,7 +20,7 @@ export const ChatHistory = observer(() => {
                 <h5 className='text-center display-4 text-black'>Your chats</h5>
             </Row>
             <ListGroup className='chat-history' as="ol">
-                {chatService.chatHistory.map((chat, index) =>
+                {chatService.chatHistory.filter(o => o.LastMessage != null).map((chat, index) =>
                     <ListGroup.Item role="button" key={index} onClick={() => navigate({ search: '?chat=' + chat.ChatId })} as="li" className="d-flex justify-content-between align-items-start">
                     <div className="ms-2 me-auto">
                     <div className="fw-bold">{chat.Type == ChatType.Regular ? chat.ChatId : chat.Name}</div>

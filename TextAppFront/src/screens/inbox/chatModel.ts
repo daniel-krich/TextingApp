@@ -1,4 +1,5 @@
 import { makeAutoObservable } from "mobx";
+import { ChatHistoryStruct, UserChatStruct } from '../../services';
 
 class ChatInputModel {
     chatText: string = "";

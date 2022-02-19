@@ -96,6 +96,47 @@ namespace TextAppApi.Controllers
             }
         }
 
+        [HttpPost("contact")]
+        public async Task<string> GetChatContactInfo([FromBody] GetChatContactModel chat)
+        {
+            var res = await _dbContext.TryGetUserEntityBySessionToken(chat.Token);
+            if (res is UserEntity user)
+            {
+                var finduser = await _dbContext.TryGetUserEntityByUsername(chat.ChatId);
+                if (finduser is UserEntity founduser)
+                {
+                    IList<UserResponseModel> userResponses = new List<UserResponseModel>();
+                    userResponses.Add(new UserResponseModel
+                    {
+                        Username = user.Username,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName
+                    });
+                    userResponses.Add(new UserResponseModel
+                    {
+                        Username = founduser.Username,
+                        FirstName = founduser.FirstName,
+                        LastName = founduser.LastName
+                    });
+                    ChatResponseModel chatResponse = new ChatResponseModel
+                    {
+                        ChatId = chat.ChatId,
+                        Type = ChatType.Regular,
+                        Participants = userResponses
+                    };
+                    return chatResponse.ToString();
+                }
+                else
+                {
+                    return new ResponseModel(21, "Chat error", "Couldn't find user.").ToString();
+                }
+            }
+            else
+            {
+                return new ResponseModel(21, "Chat error", "Provided invalid token.").ToString();
+            }
+        }
+
         [HttpPost("messages")]
         public async Task<string> GetChatMessagesOffset([FromBody] GetChatMessagesModel chat)
         {

@@ -38,7 +38,7 @@ namespace TextAppApi.Controllers
                     if (message.TypeChat == ChatType.Regular)
                     {
                         var finduser = await _dbContext.TryGetUserEntityByUsername(message.ChatId);
-                        if (finduser is UserEntity founduser)
+                        if (finduser is UserEntity founduser && founduser.Id != user.Id) // can't message to yourself
                         {
                             var associatedChat = await _dbContext.GetChatCollection().FindAsync(o => o.Type == ChatType.Regular && 
                                                                     o.Participants.Contains(DbRefFactory.UserRef(founduser.Id)) &&
