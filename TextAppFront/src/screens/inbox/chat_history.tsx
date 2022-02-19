@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { observer } from 'mobx-react';
 import { Container, Row, Col, ListGroup, Badge } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -10,6 +10,7 @@ import { ChatType } from '../../services';
 
 export const ChatHistory = observer(() => {
     const navigate = useNavigate();
+    const location = useLocation();
     const chatService = useGlobalStore().chatService;
     useEffect(() => {
         runInAction(() => chatService.chatHistory = chatService.chatHistory.sort((a,b) => new Date(b.LastMessage.Time).getTime() - new Date(a.LastMessage.Time).getTime()));
@@ -21,7 +22,7 @@ export const ChatHistory = observer(() => {
             </Row>
             <ListGroup className='chat-history' as="ol">
                 {chatService.chatHistory.filter(o => o.LastMessage != null).map((chat, index) =>
-                    <ListGroup.Item role="button" key={index} onClick={() => navigate({ search: '?chat=' + chat.ChatId })} as="li" className="d-flex justify-content-between align-items-start">
+                    <ListGroup.Item role="button" key={index} onClick={() => navigate('/inbox/' + chat.ChatId)} as="li" className="d-flex justify-content-between align-items-start">
                     <div className="ms-2 me-auto">
                     <div className="fw-bold">{chat.Type == ChatType.Regular ? chat.ChatId : chat.Name}</div>
                     {chat.LastMessage.Sender.FirstName} {chat.LastMessage.Sender.LastName}: {chat.LastMessage.Message}

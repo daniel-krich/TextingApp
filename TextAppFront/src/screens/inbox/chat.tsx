@@ -2,16 +2,17 @@ import React, { BaseSyntheticEvent, FormEvent, UIEventHandler, useEffect, useSta
 import { Container, Row, Col, ListGroup, Form, FormControl, Button } from 'react-bootstrap';
 import { observer } from 'mobx-react';
 import { runInAction } from 'mobx';
-import { useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './chat.css';
 import { useGlobalStore } from '../../services';
 import { ChatHistoryStruct, ChatType } from '../../services/chat';
 import { ChatModel } from './chatModel';
 
-export const Chat = observer(({ chatId } : {chatId : string}) => {
+export const Chat = observer(() => {
+    const { chatId } = useParams();
+    const navigate = useNavigate();
     const [dontRenderChunks, setDontRenderChunks] = useState(false);
-    const [searchParams, setSearchParams] = useSearchParams();
     const chatService = useGlobalStore().chatService;
     const chats = useGlobalStore().chatService.chatHistory;
     const user = useGlobalStore().authService.account;
@@ -29,6 +30,7 @@ export const Chat = observer(({ chatId } : {chatId : string}) => {
 
     const onSubmitMessage = async function(evt: FormEvent) {
         evt.preventDefault();
+        if(ChatModel.chatText.length <= 0) return;
         if(chatService.currentChat != undefined)
             await chatService.sendMessage(chatService.currentChat?.ChatId, chatService.currentChat?.Type, ChatModel.chatText);
         else
@@ -60,7 +62,7 @@ export const Chat = observer(({ chatId } : {chatId : string}) => {
             
             <Container>
                 <Row className='p-3 bg-white'>
-                    <Col md={2}><h6 role="button" onClick={() => setSearchParams('')} className='text-center display-4 text-black'>Back</h6></Col>
+                    <Col md={2}><h6 role="button" onClick={() => navigate('/inbox')} className='text-center display-4 text-black'>Back</h6></Col>
                     <Col md={8}><h6 className='text-center display-4 text-black'>{chatService.currentChat?.Type == ChatType.Regular ? chatService.chatPartner?.FirstName + ' ' + chatService.chatPartner?.LastName : chatService.currentChat?.Name}</h6></Col>
                 </Row>
 

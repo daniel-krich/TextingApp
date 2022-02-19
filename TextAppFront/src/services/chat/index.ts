@@ -49,19 +49,19 @@ export class Chat {
         handleMessages.onmessage = (e) => this.handleMessages(e);
     }
 
-    async loadChat(chatId: string): Promise<ChatHistoryStruct> {
+    async loadChat(chatId: string | undefined): Promise<ChatHistoryStruct> {
         const res = await (await Ajax.Post("https://localhost:44310/api/chat/contact",
         {
             Token: TokenStore.token,
             ChatId: chatId
         })).json() as ChatHistoryStruct;
-        if(this.chatHistory.findIndex(o => o.ChatId == res.ChatId) == -1)
+        if(this.chatHistory.findIndex(o => o.ChatId == res.ChatId) == -1 && res.ChatId != undefined)
         {
             
             console.log("added chat to history");
             return this.chatHistory[this.chatHistory.push(res)-1];
         }
-        throw 'can\'t load chat that already exists in the history';
+        throw 'Invalid chat';
     }
 
     async loadChatChunk(currentChat: ChatHistoryStruct | undefined): Promise<number> {

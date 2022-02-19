@@ -6,11 +6,10 @@ import { useGlobalStore } from '../../services';
 import { NavBar } from '../../components';
 import { ChatHistory } from './chat_history';
 import { Chat } from './chat';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams, Routes, Route, Link, Outlet } from 'react-router-dom';
 
 export function Inbox() {
-    const [searchParams, setSearchParams] = useSearchParams();
-    const chatIdParam = searchParams.get('chat') || '';
+    const { chatId } = useParams();
     return (
         <>
             <NavBar/>
@@ -18,9 +17,8 @@ export function Inbox() {
                 <Row className='chat-row'>
                     <Col sm={12}>
                         {
-                            chatIdParam.length > 0 ?
-                            <Chat chatId={chatIdParam}/> : <ChatHistory/>
-
+                            chatId != undefined && chatId.length > 0 ?
+                            <Chat /> : <ChatHistory/>
                         }
                     </Col>
                 </Row>

@@ -40,7 +40,6 @@
     overflow-x: hidden;
     display: flex;
     flex-direction: column-reverse;
-    background-color: #efefef;
     overflow-anchor: none;
 }
 

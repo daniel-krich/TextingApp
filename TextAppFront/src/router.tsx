@@ -8,7 +8,9 @@ export default function ContentRouter(props: any) {
                 <Route path="/" element={<Home />}/>
                 <Route path="/contacts" element={<Contacts />}/>
                 <Route path="/login" element={<Login />}/>
-                <Route path="/inbox" element={<Inbox />}/>
+                <Route path="/inbox" element={<Inbox />}>
+                    <Route path=":chatId" element={<Inbox />}/>   
+                </Route>
             </Routes>
         </Router>
     );
