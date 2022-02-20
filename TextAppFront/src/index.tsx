@@ -4,7 +4,7 @@ import './index.css';
 import reportWebVitals from './reportWebVitals';
 import { GlobalContextProvider } from './services';
 import ContentRouter from './router';
-import { Loading } from './screens';
+import { Loading } from './components';
 
 ReactDOM.render(
   <React.StrictMode>

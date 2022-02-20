@@ -136,11 +136,11 @@ namespace TextAppApi.Controllers
             }
         }
 
-        [HttpGet("pull/{token}")]
-        public async Task RetrieveMessageEvent(string token)
+        [HttpPost("pull")]
+        public async Task RetrieveMessageEvent([FromBody] TokenLoginModel token)
         {
             Response.ContentType = "text/event-stream";
-            var res = await _dbContext.TryGetUserEntityBySessionToken(token);
+            var res = await _dbContext.TryGetUserEntityBySessionToken(token.Token);
             if (res is UserEntity user)
             {
                 do

@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { Home, Contacts, Login, Inbox } from './screens';
+import { Home, Contacts, Login, Inbox, Register } from './screens';
 
 export default function ContentRouter(props: any) {
     return (
@@ -8,6 +8,7 @@ export default function ContentRouter(props: any) {
                 <Route path="/" element={<Home />}/>
                 <Route path="/contacts" element={<Contacts />}/>
                 <Route path="/login" element={<Login />}/>
+                <Route path="/register" element={<Register />}/>
                 <Route path="/inbox" element={<Inbox />}>
                     <Route path=":chatId" element={<Inbox />}/>   
                 </Route>

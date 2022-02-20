@@ -1,15 +1,15 @@
-.loginBox {
+.registerBox {
     max-width: 500px;
     border: 1px solid #212121cc;
     border-radius: 5px;
     padding: 30px;
 }
 
-.loginHeaderRow {
+.registerHeaderRow {
     min-height: 250px;
 }
 
-.registerRedirect-box {
+.loginRedirect-box {
     margin-top: 10px;
     max-width: 500px;
     border: 1px solid #212121cc;

@@ -1,5 +1,5 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { Ajax, TokenStore } from '../';
+import { Ajax, TokenStore, EventStream, Consts } from '../';
 
 export enum ChatType {
     Regular,
@@ -42,15 +42,28 @@ export class Chat {
     }
 
     async loadChats() {
-        const res = await (await Ajax.Post("https://localhost:44310/api/chat", { Token: TokenStore.token })).json() as ChatHistoryStruct[];
+        const res = await (await Ajax.Post(Consts.URL + '/api/chat', { Token: TokenStore.token })).json() as ChatHistoryStruct[];
         runInAction(() => this.chatHistory = res);
         //
-        var handleMessages = new EventSource('https://localhost:44310/api/Message/pull/' + TokenStore.token);
-        handleMessages.onmessage = (e) => this.handleMessages(e);
+        //var handleMessages = new EventSource('https://localhost:44310/api/Message/pull/' + TokenStore.token);
+        //handleMessages.onmessage = (e) => this.handleMessages(e);
+
+        var source = new EventStream(Consts.URL + '/api/Message/pull', {
+            payload: JSON.stringify({
+                Token: TokenStore.token
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: 'POST',
+            withCredentials: ''
+        });
+        source.addEventListener('message', (e: any) => this.handleMessages(e));
+        source.stream();
     }
 
     async loadChat(chatId: string | undefined): Promise<ChatHistoryStruct> {
-        const res = await (await Ajax.Post("https://localhost:44310/api/chat/contact",
+        const res = await (await Ajax.Post(Consts.URL + '/api/chat/contact',
         {
             Token: TokenStore.token,
             ChatId: chatId
@@ -65,7 +78,7 @@ export class Chat {
     }
 
     async loadChatChunk(currentChat: ChatHistoryStruct | undefined): Promise<number> {
-        const res = await (await Ajax.Post("https://localhost:44310/api/Chat/messages", {
+        const res = await (await Ajax.Post(Consts.URL + '/api/Chat/messages', {
             token: TokenStore.token,
             chatId: currentChat?.ChatId,
             typeChat: currentChat?.Type,
@@ -92,7 +105,7 @@ export class Chat {
     }
 
     async sendMessage(chatId: string | undefined, typeChat: ChatType | undefined, message: string) {
-        await (await Ajax.Post("https://localhost:44310/api/Message/push", {
+        await (await Ajax.Post(Consts.URL + '/api/Message/push', {
             Token: TokenStore.token,
             chatId: chatId,
             typeChat: typeChat,

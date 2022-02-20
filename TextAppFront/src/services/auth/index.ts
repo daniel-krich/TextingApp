@@ -1,6 +1,12 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import React from 'react';
-import { Ajax, TokenStore } from '../'
+import { Ajax, TokenStore, Consts } from '../'
+
+interface ResponseModel {
+    ErrorId: number | undefined,
+    Header: string,
+    Comment: string
+}
 
 interface LoginResponse {
     Token: string
@@ -20,23 +26,34 @@ export class Auth {
         makeAutoObservable(this);
     }
 
-    async accountLogin(username: string, password: string): Promise<boolean> {
-        const json = await (await Ajax.Post("https://localhost:44310/api/user/signin", {
+    async accountLogin(username: string, password: string): Promise<ResponseModel> {
+        const json = await (await Ajax.Post(Consts.URL + '/api/user/signin', {
             Username: username,
             Password: password
         })).json() as LoginResponse;
         if(json.Token != null)
         {
             TokenStore.token = json.Token;
-            return true;
+            return (json as {}) as ResponseModel;
         }
-        return false;
+        return (json as {}) as ResponseModel;
+    }
+
+    async accountRegister(username: string, password: string, email: string, firstname: string, lastname: string): Promise<ResponseModel> {
+        const json = await (await Ajax.Post(Consts.URL + '/api/user/signup', {
+            username: username,
+            password: password,
+            email: email,
+            firstName: firstname,
+            lastName: lastname
+        })).json() as ResponseModel;
+        return json;
     }
 
     async accountLoginToken() {
         if(TokenStore.token != null && TokenStore.token != undefined && this.isLogged == false)
         {
-            var res = await (await Ajax.Post("https://localhost:44310/api/user/auth_token", { Token: TokenStore.token })).json() as LoginTokenResponse;
+            var res = await (await Ajax.Post(Consts.URL + '/api/user/auth_token', { Token: TokenStore.token })).json() as LoginTokenResponse;
             runInAction(() => this.account = res);
             if(!this.isLogged)
             {

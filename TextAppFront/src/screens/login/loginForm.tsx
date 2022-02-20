@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { observer } from 'mobx-react';
 import { runInAction } from 'mobx';
-import { Form, Button, Container } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './loginForm.css'
 import { useGlobalStore } from '../../services';
@@ -9,30 +9,41 @@ import { loginModel } from './loginFormModel';
 import { useNavigate } from 'react-router-dom';
 
 function LoginFormComp() {
+    const [validated, setValidated] = useState(false);
     const navigate = useNavigate();
     const globalStore = useGlobalStore();
-    const login = async (evt: React.FormEvent) => {
+    const login = async (evt: React.FormEvent<HTMLFormElement>) => {
         evt.preventDefault();
-        if(await globalStore.authService.accountLogin(loginModel.Username, loginModel.Password))
+        evt.stopPropagation();
+        if(evt.currentTarget.reportValidity())
         {
-            window.location.assign('/');
+            setValidated(false);
+            const loginRes = await globalStore.authService.accountLogin(loginModel.Username, loginModel.Password);
+            if(loginRes.ErrorId == undefined) // success
+            {
+                window.location.assign('/');
+            }
+            else
+            {
+                runInAction(() => loginModel.ErrorText = loginRes.Comment);
+            }
         }
         else
         {
-            runInAction(() => loginModel.ErrorText = "Invalid username or password");
+            setValidated(true);
         }
     };
     return (
     <Container className='loginBox'>
-        <Form onSubmit={login}>
+        <Form noValidate validated={validated} onSubmit={login}>
             <Form.Group className="mb-3" controlId="formBasicText">
                 <Form.Label>Username</Form.Label>
-                <Form.Control type="text" value={loginModel.Username} onChange={(evt) => runInAction(() => loginModel.Username = evt.target.value)} placeholder="Enter username" />
+                <Form.Control required minLength={4} maxLength={24} type="text" value={loginModel.Username} onChange={(evt) => runInAction(() => loginModel.Username = evt.target.value)} placeholder="Enter username" />
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="formBasicPassword">
                 <Form.Label>Password</Form.Label>
-                <Form.Control type="password" value={loginModel.Password} onChange={(evt) => runInAction(() => loginModel.Password = evt.target.value)} placeholder="Password" />
+                <Form.Control required minLength={6} maxLength={24} type="password" value={loginModel.Password} onChange={(evt) => runInAction(() => loginModel.Password = evt.target.value)} placeholder="Password" />
                 <Form.Text className="text-muted">
                 Never share your password with anyone else.
                 </Form.Text>
@@ -45,12 +56,14 @@ function LoginFormComp() {
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="formBasicCheckbox">
-                <Form.Check type="checkbox" label="This is my personal device" />
+                <Form.Check type="checkbox" label="Remember me" />
             </Form.Group>
 
-            <Button variant="outline-primary" type="submit">
-                Submit
-            </Button>
+            <Row className="mt-4">
+                <Col className="d-flex justify-content-center">
+                    <Button variant="outline-primary" type="submit">Login</Button>
+                </Col>
+            </Row>
 
         </Form>
     </Container>

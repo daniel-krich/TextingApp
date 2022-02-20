@@ -1,5 +1,5 @@
-export { Home } from './home';
-export { Contacts } from './contacts';
-export { Login } from './login';
-export { Loading } from './loading';
-export { Inbox } from './inbox';
+export * from './home';
+export * from './contacts';
+export * from './login';
+export * from './inbox';
+export * from './register';
