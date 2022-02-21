@@ -9,13 +9,12 @@ export const Home = observer(() => {
     const globalcontext = useGlobalStore();
     const authService = globalcontext.authService;
     const navigate = useNavigate();
-    useEffect(() => {
-        if(!authService.isLogged && globalcontext.isAppLoaded)
-            navigate('/login');
-    }, [globalcontext.isAppLoaded]);
     return (
         !authService.isLogged && globalcontext.isAppLoaded ?
-        <></>
+        <>
+            <NavBar/>
+            <h6>hi, nothing here, you're not logged in</h6>
+        </>
         :
         <>
             <NavBar/>

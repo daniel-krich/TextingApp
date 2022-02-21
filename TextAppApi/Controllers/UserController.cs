@@ -73,5 +73,27 @@ namespace TextAppApi.Controllers
                 return new ResponseModel(0, "Unknown error", "Error occured on create user.").ToString();
             }
         }
+
+        [HttpPost("search")]
+        public async Task<string> SearchUsers([FromBody] SearchUsersModel search)
+        {
+            var res = await _dbContext.TryGetUserEntityBySessionToken(search.Token);
+            if (res is UserEntity user)
+            {
+                var usersResult = (await _dbContext.GetUserCollection().FindAsync(o => o.Username.ToLower().Contains(search.Query.ToLower()) || o.FirstName.ToLower().Contains(search.Query.ToLower()) || o.LastName.ToLower().Contains(search.Query.ToLower()))).ToEnumerable().Take(50);
+                IList<UserResponseModel> responseUsers = new List<UserResponseModel>();
+                foreach (UserEntity userFromDb in usersResult)
+                    responseUsers.Add(new UserResponseModel {
+                        Username = userFromDb.Username,
+                        FirstName = userFromDb.FirstName,
+                        LastName = userFromDb.LastName
+                    });
+                return JsonConvert.SerializeObject(responseUsers);
+            }
+            else
+            {
+                return new ResponseModel(1, "Search error", "Provided invalid token.").ToString();
+            }
+        }
     }
 }

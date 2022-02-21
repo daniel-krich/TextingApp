@@ -1,42 +1,70 @@
+export interface AbortableRequest {
+    abort(): any,
+    response: Promise<Response> 
+}
+
+
 export class Ajax{
 
-    public static async Post(url: string, jsondata: any): Promise<Response>{
-        return fetch(url, {
-            method: 'POST',
-            mode: 'cors',
-            cache: 'no-cache',
-            credentials: 'same-origin',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            redirect: 'error',
-            referrerPolicy: 'no-referrer',
-            body: JSON.stringify(jsondata)
-        });
+    public static Post(url: string, jsondata: any): AbortableRequest{
+        const controller = new AbortController();
+        const signal = controller.signal;
+        return {
+            abort: () => controller.abort(),
+            response: fetch(url, {
+                method: 'POST',
+                mode: 'cors',
+                cache: 'no-cache',
+                credentials: 'same-origin',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                redirect: 'error',
+                referrerPolicy: 'no-referrer',
+                signal,
+                body: JSON.stringify(jsondata)
+            })
+        } as AbortableRequest;
     }
 
-    public static async Get(url: string): Promise<Response>{
-        return fetch(url, { method: 'GET' });
+    public static Get(url: string): AbortableRequest{
+        const controller = new AbortController();
+        const signal = controller.signal;
+        return {
+            abort: () => controller.abort(),
+            response: fetch(url, { method: 'GET', signal })
+        } as AbortableRequest;
     }
 
-    public static async Put(url: string, jsondata: any): Promise<Response>{
-        return fetch(url, {
-            method: 'PUT',
-            mode: 'cors',
-            cache: 'no-cache',
-            credentials: 'same-origin',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            redirect: 'error',
-            referrerPolicy: 'no-referrer',
-            body: JSON.stringify(jsondata)
-        });
+    public static Put(url: string, jsondata: any): AbortableRequest{
+        const controller = new AbortController();
+        const signal = controller.signal;
+        return {
+            abort: () => controller.abort(),
+            response: fetch(url, {
+                method: 'PUT',
+                mode: 'cors',
+                cache: 'no-cache',
+                credentials: 'same-origin',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                redirect: 'error',
+                referrerPolicy: 'no-referrer',
+                signal,
+                body: JSON.stringify(jsondata)
+            })
+        } as AbortableRequest;
 
     }
 
-    public static async Delete(url: string): Promise<Response>{
-        return fetch(url, { method: 'GET' });
+    public static Delete(url: string): AbortableRequest{
+        const controller = new AbortController();
+        const signal = controller.signal;
+        return {
+            abort: () => controller.abort(),
+            response: fetch(url, { method: 'GET', signal })
+        } as AbortableRequest;
 
     }
 

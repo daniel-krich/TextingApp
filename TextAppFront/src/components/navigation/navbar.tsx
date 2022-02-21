@@ -1,13 +1,20 @@
 import React from 'react';
 import { useNavigate } from "react-router-dom";
-import { Container, Navbar, Nav, NavDropdown } from 'react-bootstrap';
+import { Container, Navbar, Nav, NavDropdown, Dropdown, Form, Row, Col, Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { useGlobalStore } from '../../services';
-import { TokenStore } from '../../services';
+import './navbar.css';
+import { useGlobalStore, TokenStore } from '../../services';
+import { SearchBoxModel } from './navbarSearchModel';
+import { runInAction } from 'mobx';
+import { observer } from 'mobx-react';
 
-export function NavBar() {
+export const NavBar = observer(() => {
     const navigation = useNavigate();
     const globalStore = useGlobalStore();
+    const onSearchChange = function(e: React.ChangeEvent<HTMLInputElement>) {
+        runInAction(() => SearchBoxModel.searchText = e.target.value);
+        SearchBoxModel.searchForUsers();
+    };
     const logout = () => {
         TokenStore.clearTokens();
         window.location.assign('/');
@@ -29,8 +36,49 @@ export function NavBar() {
                         <NavDropdown.Item onClick={() => navigation('/about')}>About</NavDropdown.Item>
                         <NavDropdown.Item onClick={() => navigation('/terms')}>Terms and conditions</NavDropdown.Item>
                     </NavDropdown>
-                   
                     </Nav>
+                    
+                    {globalStore.authService.isLogged &&
+                        <Nav className="me-auto">
+                            <Form onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                                <Row className='d-flex'>
+                                    <Form.Group as={Col}>
+                                        
+                                        <Dropdown>
+                                            <Dropdown.Toggle className='p-0 m-0 d-inline-flex invisible'>
+                                                <Form.Control value={SearchBoxModel.searchText} onChange={onSearchChange} className='visible' type="text" placeholder='search...'/>
+                                            </Dropdown.Toggle>
+
+                                            <Dropdown.Menu className='search-results'>
+                                            {
+                                                !SearchBoxModel.searchUsers.length ?
+                                                <>
+                                                    <Dropdown.Header>No results</Dropdown.Header>
+                                                </>
+                                                :
+                                                <>
+                                                    {
+                                                        !!SearchBoxModel.searchText.length ?
+                                                        <Dropdown.Header>Search results</Dropdown.Header> :
+                                                        <Dropdown.Header>Previous results</Dropdown.Header>
+                                                    }
+                                                    
+                                                    {
+                                                        SearchBoxModel.searchUsers.map((user, index) =>
+                                                            <Dropdown.Item onClick={() => navigation('/profile/' + user.Username)} key={index}>{user.FirstName + ' ' + user.LastName}</Dropdown.Item>
+                                                        )
+                                                    }
+                                                </>
+                                            }
+                                            </Dropdown.Menu>
+                                        </Dropdown>
+                                        
+                                    </Form.Group>
+                                </Row>
+                            </Form>
+                        </Nav>
+                    }
+
                     <Nav>
                     {globalStore.authService.isLogged ?
                         <>
@@ -43,7 +91,7 @@ export function NavBar() {
                         </>
                         :
                         <>
-                            <Nav.Link onClick={() => navigation('/signup')}>Sign up</Nav.Link>
+                            <Nav.Link onClick={() => navigation('/register')}>Sign up</Nav.Link>
                             <Nav.Link onClick={() => navigation('/login')}>Log in</Nav.Link>
                         </>
                     }
@@ -52,4 +100,4 @@ export function NavBar() {
             </Container>
         </Navbar>
     );
-}
+});

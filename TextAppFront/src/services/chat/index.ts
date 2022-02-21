@@ -42,7 +42,7 @@ export class Chat {
     }
 
     async loadChats() {
-        const res = await (await Ajax.Post(Consts.URL + '/api/chat', { Token: TokenStore.token })).json() as ChatHistoryStruct[];
+        const res = await (await Ajax.Post(Consts.URL + '/api/chat', { Token: TokenStore.token }).response).json() as ChatHistoryStruct[];
         runInAction(() => this.chatHistory = res);
         //
         //var handleMessages = new EventSource('https://localhost:44310/api/Message/pull/' + TokenStore.token);
@@ -67,7 +67,7 @@ export class Chat {
         {
             Token: TokenStore.token,
             ChatId: chatId
-        })).json() as ChatHistoryStruct;
+        }).response).json() as ChatHistoryStruct;
         if(this.chatHistory.findIndex(o => o.ChatId == res.ChatId) == -1 && res.ChatId != undefined)
         {
             
@@ -83,7 +83,7 @@ export class Chat {
             chatId: currentChat?.ChatId,
             typeChat: currentChat?.Type,
             messageOffset: currentChat?.Messages?.length || 0
-        })).json() as ChatStruct;
+        }).response).json() as ChatStruct;
 
         if(res.Messages ?? undefined) {
 
@@ -110,7 +110,7 @@ export class Chat {
             chatId: chatId,
             typeChat: typeChat,
             message: message
-        })).json() as ChatHistoryStruct[];
+        }).response).json() as ChatHistoryStruct[];
     }
 
     handleMessages(e: MessageEvent) {

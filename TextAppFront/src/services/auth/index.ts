@@ -30,7 +30,7 @@ export class Auth {
         const json = await (await Ajax.Post(Consts.URL + '/api/user/signin', {
             Username: username,
             Password: password
-        })).json() as LoginResponse;
+        }).response).json() as LoginResponse;
         if(json.Token != null)
         {
             TokenStore.token = json.Token;
@@ -46,14 +46,14 @@ export class Auth {
             email: email,
             firstName: firstname,
             lastName: lastname
-        })).json() as ResponseModel;
+        }).response).json() as ResponseModel;
         return json;
     }
 
     async accountLoginToken() {
         if(TokenStore.token != null && TokenStore.token != undefined && this.isLogged == false)
         {
-            var res = await (await Ajax.Post(Consts.URL + '/api/user/auth_token', { Token: TokenStore.token })).json() as LoginTokenResponse;
+            var res = await (await Ajax.Post(Consts.URL + '/api/user/auth_token', { Token: TokenStore.token }).response).json() as LoginTokenResponse;
             runInAction(() => this.account = res);
             if(!this.isLogged)
             {

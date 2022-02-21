@@ -120,9 +120,6 @@ export class EventStream {
         this.chunk = '';
     }
   
-    /**
-     * Parse a received SSE event chunk into a constructed event object.
-     */
     _parseEventChunk(chunk: string): any {
         if (!chunk || chunk.length === 0) return null;
 
@@ -133,11 +130,7 @@ export class EventStream {
         chunk.split(/\n|\r\n|\r/).forEach(function(line: any) {
             line = line.trimRight();
             var index = line.indexOf(':');
-            if (index <= 0) {
-                // Line was either empty, or started with a separator and is a comment.
-                // Either way, ignore.
-                return;
-            }
+            if (index <= 0) return;
   
             var field = line.substring(0, index);
             if (!(field in e)) {

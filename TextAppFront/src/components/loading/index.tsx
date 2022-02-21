@@ -22,7 +22,7 @@ export const Loading : FC = observer(({children}) => {
                     </Row>
                 </Container>
             </Container>
-            {globalStore.isAppLoaded ? children : null}
+            {globalStore.isAppLoaded && children}
         </>
     );
 });
