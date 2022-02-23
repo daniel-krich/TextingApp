@@ -1,3 +1,5 @@
+import { TokenStore } from "..";
+
 export interface AbortableRequest {
     abort(): any,
     response: Promise<Response> 
@@ -6,7 +8,10 @@ export interface AbortableRequest {
 
 export class Ajax{
 
-    public static Post(url: string, jsondata: any): AbortableRequest{
+    public static Post(url: string, jsondata: any, useToken: boolean): AbortableRequest{
+        const useHeaders: any = useToken ?
+            { 'Content-Type': 'application/json', 'authorization': 'Bearer ' + TokenStore.token } :
+            { 'Content-Type': 'application/json' };
         const controller = new AbortController();
         const signal = controller.signal;
         return {
@@ -16,9 +21,7 @@ export class Ajax{
                 mode: 'cors',
                 cache: 'no-cache',
                 credentials: 'same-origin',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
+                headers: useHeaders,
                 redirect: 'error',
                 referrerPolicy: 'no-referrer',
                 signal,
@@ -27,16 +30,26 @@ export class Ajax{
         } as AbortableRequest;
     }
 
-    public static Get(url: string): AbortableRequest{
+    public static Get(url: string, useToken: boolean): AbortableRequest{
+        const useHeaders: any = useToken ?
+            { 'Content-Type': 'application/json', 'authorization': 'Bearer ' + TokenStore.token } :
+            { 'Content-Type': 'application/json' };
         const controller = new AbortController();
         const signal = controller.signal;
         return {
             abort: () => controller.abort(),
-            response: fetch(url, { method: 'GET', signal })
+            response: fetch(url, {
+                method: 'GET',
+                headers: useHeaders,
+                signal
+            })
         } as AbortableRequest;
     }
 
-    public static Put(url: string, jsondata: any): AbortableRequest{
+    public static Put(url: string, jsondata: any, useToken: boolean): AbortableRequest{
+        const useHeaders: any = useToken ?
+            { 'Content-Type': 'application/json', 'authorization': 'Bearer ' + TokenStore.token } :
+            { 'Content-Type': 'application/json' };
         const controller = new AbortController();
         const signal = controller.signal;
         return {
@@ -46,9 +59,7 @@ export class Ajax{
                 mode: 'cors',
                 cache: 'no-cache',
                 credentials: 'same-origin',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
+                headers: useHeaders,
                 redirect: 'error',
                 referrerPolicy: 'no-referrer',
                 signal,
@@ -58,12 +69,19 @@ export class Ajax{
 
     }
 
-    public static Delete(url: string): AbortableRequest{
+    public static Delete(url: string, useToken: boolean): AbortableRequest{
+        const useHeaders: any = useToken ?
+            { 'Content-Type': 'application/json', 'authorization': 'Bearer ' + TokenStore.token } :
+            { 'Content-Type': 'application/json' };
         const controller = new AbortController();
         const signal = controller.signal;
         return {
             abort: () => controller.abort(),
-            response: fetch(url, { method: 'GET', signal })
+            response: fetch(url, {
+                method: 'GET',
+                headers: useHeaders,
+                signal
+            })
         } as AbortableRequest;
 
     }

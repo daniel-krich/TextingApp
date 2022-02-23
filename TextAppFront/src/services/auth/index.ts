@@ -1,6 +1,6 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import React from 'react';
-import { Ajax, TokenStore, Consts } from '../'
+import { Ajax, TokenStore, Consts, NotifyService } from '../'
 
 interface ResponseModel {
     ErrorId: number | undefined,
@@ -9,10 +9,10 @@ interface ResponseModel {
 }
 
 interface LoginResponse {
-    Token: string
+    AccessToken: string
 }
 
-interface LoginTokenResponse {
+export interface LoginTokenResponse {
     Username: string,
     Email: string,
     FirstName: string,
@@ -21,39 +21,39 @@ interface LoginTokenResponse {
 
 export class Auth {
     account: LoginTokenResponse;
-    constructor(){
+    constructor(notify: NotifyService){
         this.account = {} as LoginTokenResponse;
         makeAutoObservable(this);
     }
 
     async accountLogin(username: string, password: string): Promise<ResponseModel> {
-        const json = await (await Ajax.Post(Consts.URL + '/api/user/signin', {
+        const json = await (await Ajax.Post(Consts.URL + '/api/user/login', {
             Username: username,
             Password: password
-        }).response).json() as LoginResponse;
-        if(json.Token != null)
+        }, false).response).json() as LoginResponse;
+        if(json.AccessToken != null)
         {
-            TokenStore.token = json.Token;
+            TokenStore.token = json.AccessToken;
             return (json as {}) as ResponseModel;
         }
         return (json as {}) as ResponseModel;
     }
 
     async accountRegister(username: string, password: string, email: string, firstname: string, lastname: string): Promise<ResponseModel> {
-        const json = await (await Ajax.Post(Consts.URL + '/api/user/signup', {
+        const json = await (await Ajax.Post(Consts.URL + '/api/user/register', {
             username: username,
             password: password,
             email: email,
             firstName: firstname,
             lastName: lastname
-        }).response).json() as ResponseModel;
+        }, false).response).json() as ResponseModel;
         return json;
     }
 
     async accountLoginToken() {
         if(TokenStore.token != null && TokenStore.token != undefined && this.isLogged == false)
         {
-            var res = await (await Ajax.Post(Consts.URL + '/api/user/auth_token', { Token: TokenStore.token }).response).json() as LoginTokenResponse;
+            var res = await (await Ajax.Get(Consts.URL + '/api/user/refresh', true).response).json() as LoginTokenResponse;
             runInAction(() => this.account = res);
             if(!this.isLogged)
             {

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -6,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using TextAppApi.Core;
 using TextAppData.DataContext;
@@ -28,9 +30,10 @@ namespace TextAppApi.Controllers
         }
 
         [HttpPost("push")]
+        [Authorize]
         public async Task<string> PushMessage([FromBody] PushMessageModel message)
         {
-            var res = await _dbContext.TryGetUserEntityBySessionToken(message.Token);
+            var res = await _dbContext.TryGetUserEntityById(this.User.FindFirstValue(ClaimTypes.SerialNumber));
             if (res is UserEntity user)
             {
                 if (message.ChatId.Length > 0)
@@ -136,11 +139,12 @@ namespace TextAppApi.Controllers
             }
         }
 
-        [HttpPost("pull")]
-        public async Task RetrieveMessageEvent([FromBody] TokenLoginModel token)
+        [HttpGet("pull")]
+        [Authorize]
+        public async Task RetrieveMessageEvent()
         {
             Response.ContentType = "text/event-stream";
-            var res = await _dbContext.TryGetUserEntityBySessionToken(token.Token);
+            var res = await _dbContext.TryGetUserEntityById(this.User.FindFirstValue(ClaimTypes.SerialNumber));
             if (res is UserEntity user)
             {
                 do

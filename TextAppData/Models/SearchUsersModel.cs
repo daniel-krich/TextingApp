@@ -8,7 +8,7 @@ using TextAppData.Enums;
 
 namespace TextAppData.Models
 {
-    public class SearchUsersModel : TokenLoginModel
+    public class SearchUsersModel
     {
         [Required]
         public string Query { get; set; }

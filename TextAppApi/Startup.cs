@@ -16,6 +16,17 @@ using TextAppData.DataContext;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Rewrite;
+using TextAppApi.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using TextAppApi.Queries;
+using HotChocolate;
+using HotChocolate.AspNetCore;
+using TextAppApi.QueryTypes;
+using MongoDB.Bson;
+using HotChocolate.Types;
+using TextAppApi.QueryResolvers;
 
 namespace TextAppApi
 {
@@ -31,12 +42,68 @@ namespace TextAppApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+            services.AddAuthentication(opt =>
+            {
+                opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+
+                    ValidIssuer = TokenService.IssuerAddr,
+                    ValidAudience = TokenService.AudienceAddr,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TokenService.TokenKey))
+                };
+            });
+            services.AddTransient<ITokenService, TokenService>();
             services.AddSingleton<IDbContext, DbContext>();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "TextAppApi", Version = "v1" });
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = @"JWT Authorization header using the Bearer scheme.<br>
+                                    Example: 'Bearer 12345abcdef'",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            },
+                            Scheme = "oauth2",
+                            Name = "Bearer",
+                            In = ParameterLocation.Header,
+                        },
+                        new List<string>()
+                    }
+                });
             });
+            services.AddHttpContextAccessor();
+            services.AddGraphQLServer()
+                .AddQueryType<MongoQuery>()
+                .AddTypes(typeof(ChatType), typeof(UserType), typeof(MessageType), typeof(DBRefType))
+                .AddQueryableCursorPagingProvider()
+                .AddMongoDbProjections()
+                .AddMongoDbSorting();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -72,13 +139,16 @@ namespace TextAppApi
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
-            
+
+
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapGraphQL();
             });
         }
     }

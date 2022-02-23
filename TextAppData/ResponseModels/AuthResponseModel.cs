@@ -9,7 +9,7 @@ namespace TextAppData.ResponseModels
 {
     public class AuthResponseModel
     {
-        public string Token { get; set; }
+        public string AccessToken { get; set; }
 
         public override string ToString()
         {

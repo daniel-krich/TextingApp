@@ -4,3 +4,5 @@ export * from './storage/token';
 export * from './chat';
 export * from './eventStream';
 export * from './const';
+export * from './auth';
+export * from './notifications';

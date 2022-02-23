@@ -16,6 +16,8 @@ using TextAppData.Models;
 using TextAppApi.Core;
 using TextAppData.ResponseModels;
 using TextAppData.Enums;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace TextAppApi.Controllers
 {
@@ -30,10 +32,11 @@ namespace TextAppApi.Controllers
             _dbContext = dbContext;
         }
 
-        [HttpPost]
-        public async Task<string> GetChats([FromBody] TokenLoginModel token)
+        [HttpGet]
+        [Authorize]
+        public async Task<string> GetChats()
         {
-            var res = await _dbContext.TryGetUserEntityBySessionToken(token.Token);
+            var res = await _dbContext.TryGetUserEntityById(this.User.FindFirstValue(ClaimTypes.SerialNumber));
             if (res is UserEntity user)
             {
                 var associatedChats = await _dbContext.GetChatCollection().FindAsync(o => o.Participants.Contains(DbRefFactory.UserRef(user.Id)));
@@ -97,9 +100,10 @@ namespace TextAppApi.Controllers
         }
 
         [HttpPost("contact")]
+        [Authorize]
         public async Task<string> GetChatContactInfo([FromBody] GetChatContactModel chat)
         {
-            var res = await _dbContext.TryGetUserEntityBySessionToken(chat.Token);
+            var res = await _dbContext.TryGetUserEntityById(this.User.FindFirstValue(ClaimTypes.SerialNumber));
             if (res is UserEntity user)
             {
                 var finduser = await _dbContext.TryGetUserEntityByUsername(chat.ChatId);
@@ -138,9 +142,10 @@ namespace TextAppApi.Controllers
         }
 
         [HttpPost("messages")]
+        [Authorize]
         public async Task<string> GetChatMessagesOffset([FromBody] GetChatMessagesModel chat)
         {
-            var res = await _dbContext.TryGetUserEntityBySessionToken(chat.Token);
+            var res = await _dbContext.TryGetUserEntityById(this.User.FindFirstValue(ClaimTypes.SerialNumber));
             if (res is UserEntity user)
             {
                 if (chat.ChatId.Length > 0)

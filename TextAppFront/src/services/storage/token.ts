@@ -1,7 +1,7 @@
 import Storage from './storageBase'
 
 enum TokenNames {
-    AUTH_TOKEN = '_ATOKEN'
+    AUTH_TOKEN = 'AccessToken'
 }
 
 class Tokens extends Storage<string> {

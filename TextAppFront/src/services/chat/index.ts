@@ -1,5 +1,5 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { Ajax, TokenStore, EventStream, Consts } from '../';
+import { Ajax, TokenStore, EventStream, Consts, NotifyService } from '../';
 
 export enum ChatType {
     Regular,
@@ -37,25 +37,24 @@ export class Chat {
     chatHistory: ChatHistoryStruct[] = {} as ChatHistoryStruct[];
     currentChat: ChatHistoryStruct | undefined;
     chatPartner: UserChatStruct | undefined;
-    constructor(){
+    constructor(notify: NotifyService){
+        notify.addNotification("init", "chat initiated", "cool stuff, we passed the notification service to other service");
         makeAutoObservable(this);
     }
 
     async loadChats() {
-        const res = await (await Ajax.Post(Consts.URL + '/api/chat', { Token: TokenStore.token }).response).json() as ChatHistoryStruct[];
+        const res = await (await Ajax.Get(Consts.URL + '/api/chat', true).response).json() as ChatHistoryStruct[];
         runInAction(() => this.chatHistory = res);
         //
         //var handleMessages = new EventSource('https://localhost:44310/api/Message/pull/' + TokenStore.token);
         //handleMessages.onmessage = (e) => this.handleMessages(e);
 
         var source = new EventStream(Consts.URL + '/api/Message/pull', {
-            payload: JSON.stringify({
-                Token: TokenStore.token
-            }),
+            payload: '',
             headers: {
-                'Content-Type': 'application/json'
+                'authorization': 'Bearer ' + TokenStore.token
             },
-            method: 'POST',
+            method: 'GET',
             withCredentials: ''
         });
         source.addEventListener('message', (e: any) => this.handleMessages(e));
@@ -65,9 +64,8 @@ export class Chat {
     async loadChat(chatId: string | undefined): Promise<ChatHistoryStruct> {
         const res = await (await Ajax.Post(Consts.URL + '/api/chat/contact',
         {
-            Token: TokenStore.token,
             ChatId: chatId
-        }).response).json() as ChatHistoryStruct;
+        }, true).response).json() as ChatHistoryStruct;
         if(this.chatHistory.findIndex(o => o.ChatId == res.ChatId) == -1 && res.ChatId != undefined)
         {
             
@@ -79,11 +77,10 @@ export class Chat {
 
     async loadChatChunk(currentChat: ChatHistoryStruct | undefined): Promise<number> {
         const res = await (await Ajax.Post(Consts.URL + '/api/Chat/messages', {
-            token: TokenStore.token,
             chatId: currentChat?.ChatId,
             typeChat: currentChat?.Type,
             messageOffset: currentChat?.Messages?.length || 0
-        }).response).json() as ChatStruct;
+        }, true).response).json() as ChatStruct;
 
         if(res.Messages ?? undefined) {
 
@@ -97,7 +94,7 @@ export class Chat {
                 runInAction(() => chat.Messages.push(o));
             });
             
-            runInAction(() => chat.Messages = chat.Messages.sort((a,b) => new Date(a.Time).getTime() - new Date(b.Time).getTime()));
+            runInAction(() => chat.Messages = chat.Messages?.sort((a,b) => new Date(a.Time).getTime() - new Date(b.Time).getTime()));
             return res.Messages.length;
         }
         return 0;
@@ -106,11 +103,10 @@ export class Chat {
 
     async sendMessage(chatId: string | undefined, typeChat: ChatType | undefined, message: string) {
         await (await Ajax.Post(Consts.URL + '/api/Message/push', {
-            Token: TokenStore.token,
             chatId: chatId,
             typeChat: typeChat,
             message: message
-        }).response).json() as ChatHistoryStruct[];
+        }, true).response).json() as ChatHistoryStruct[];
     }
 
     handleMessages(e: MessageEvent) {

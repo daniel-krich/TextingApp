@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Driver;
+using TextAppData.DataContext;
 using TextAppData.DataEntities;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using System.Diagnostics;
 
 namespace TextAppData.DataContext
 {
@@ -90,21 +89,19 @@ namespace TextAppData.DataContext
         public async Task<TDocument> FetchDBRefAsAsync<TDocument>(MongoDBRef dbRef)
         {
             var collection = this._database.GetCollection<TDocument>(dbRef.CollectionName);
-
-            var query = Builders<TDocument>.Filter.Eq("_id", dbRef.Id);
+            var query = Builders<TDocument>.Filter.Eq(nameof(MongoDBRef.Id), dbRef.Id);
             return await (await collection.FindAsync(query)).FirstOrDefaultAsync();
         }
 
-        public async Task<List<TDocument>> FetchDBRefAsAsync<TDocument>(IList<MongoDBRef> dbRefs)
+        public async Task<IEnumerable<TDocument>> FetchDBRefAsAsync<TDocument>(IList<MongoDBRef> dbRefs)
         {
-            List<TDocument> items = new List<TDocument>();
-            foreach(MongoDBRef item in dbRefs)
+            if (dbRefs.Any())
             {
-                var collection = this._database.GetCollection<TDocument>(item.CollectionName);
-                var query = Builders<TDocument>.Filter.Eq("_id", item.Id);
-                items.Add(await (await collection.FindAsync(query)).FirstOrDefaultAsync());
+                var collection = this._database.GetCollection<TDocument>(dbRefs.FirstOrDefault().CollectionName);
+                var query = Builders<TDocument>.Filter.In(nameof(MongoDBRef.Id), dbRefs.Select(x => x.Id));
+                return (await collection.FindAsync(query)).ToEnumerable();
             }
-            return items;
+            else return new List<TDocument>();
         }
 
         public async Task<UserEntity> TryGetUserEntityBySessionToken(string token)
@@ -126,6 +123,22 @@ namespace TextAppData.DataContext
                 return model;
             else
                 return null;
+        }
+
+        public async Task<UserEntity> TryGetUserEntityById(string id)
+        {
+            try
+            {
+                var res = await GetUserCollection().FindAsync(o => o.Id == ObjectId.Parse(id));
+                if (await res.FirstOrDefaultAsync() is UserEntity model)
+                    return model;
+                else
+                    return null;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public async Task<UserEntity> TryGetUserEntityByUsername(string username)

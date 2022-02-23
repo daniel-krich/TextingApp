@@ -20,7 +20,7 @@ export const NavBar = observer(() => {
         window.location.assign('/');
     };
     return (
-        <Navbar collapseOnSelect expand="lg" bg="dark" variant="dark">
+        <Navbar collapseOnSelect expand="md" bg="dark" variant="dark">
             <Container>
                 <Navbar.Brand>My Text App</Navbar.Brand>
                 <Navbar.Toggle aria-controls="responsive-navbar-nav" />
@@ -46,7 +46,7 @@ export const NavBar = observer(() => {
                                         
                                         <Dropdown>
                                             <Dropdown.Toggle className='p-0 m-0 d-inline-flex invisible'>
-                                                <Form.Control value={SearchBoxModel.searchText} onChange={onSearchChange} className='visible' type="text" placeholder='search...'/>
+                                                <Form.Control maxLength={30} value={SearchBoxModel.searchText} onChange={onSearchChange} className='visible' type="text" placeholder='search...'/>
                                             </Dropdown.Toggle>
 
                                             <Dropdown.Menu className='search-results'>

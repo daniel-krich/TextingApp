@@ -23,9 +23,8 @@ class SearchModel {
             this.request.abort();
         }
         this.request = Ajax.Post(Consts.URL + '/api/User/search', {
-            Token: TokenStore.token,
             Query: this.searchText
-        });
+        }, true);
         this.request.response.then(async (res) => {
             const searchResult = await res.json() as User[] | undefined;
             this.clearSearchUsers();
@@ -35,7 +34,7 @@ class SearchModel {
                     runInAction(() => this.searchUsers.push(user));
                 });
             }
-        });
+        }).catch(_ => {});
     }
 
     clearSearchUsers() {

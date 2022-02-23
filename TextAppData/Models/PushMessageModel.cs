@@ -8,7 +8,7 @@ using TextAppData.Enums;
 
 namespace TextAppData.Models
 {
-    public class PushMessageModel : TokenLoginModel
+    public class PushMessageModel
     {
         [Required]
         public string ChatId { get; set; }
