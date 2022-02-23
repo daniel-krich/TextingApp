@@ -17,10 +17,9 @@ namespace TextAppApi.QueryResolvers
 {
     public class MessagesResolver
     {
-        public async Task<IExecutable<MessageEntity>> GetMessages([Parent] ChatEntity chat, [Service] IDbContext dbContext, IResolverContext context)
+        public async Task<IQueryable<MessageEntity>> GetMessages([Parent] ChatEntity chat, [Service] IDbContext dbContext, IResolverContext context)
         {
-            return (await dbContext.FetchDBRefAsAsync<MessageEntity>(chat.Messages)).AsQueryable().AsExecutable();
-            //return dbContext.GetMessageCollection().AsQueryable().Where(o => chat.Messages.Contains(DbRefFactory.MessageRef(o.Id))).AsExecutable();
+            return (await dbContext.FetchDBRefAsAsync<MessageEntity>(chat.Messages)).FilterByContext(context).AsQueryable();
         }
     }
 }

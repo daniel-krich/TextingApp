@@ -13,30 +13,61 @@ using HotChocolate.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
-using TextAppApi.QueryTypes;
+using TextAppData.Enums;
+//using TextAppApi.QueryTypes;
 
 namespace TextAppApi.Queries
 {
     public class MongoQuery
     {
-        [UsePaging]
-        [UseOffsetPaging]
-        [UseProjection]
-        [UseSorting]
-        public IExecutable<UserEntity> CurrentUser([Service] IDbContext dbContext, [Service] IHttpContextAccessor httpContextAccessor)
+        private IDbContext _dbContext;
+        private IHttpContextAccessor _httpContextAccessor;
+        public MongoQuery([Service] IDbContext dbContext, [Service] IHttpContextAccessor httpContextAccessor)
         {
-            return dbContext.GetUserCollection().AsQueryable().Where(o => o.Id == ObjectId.Parse(httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber))).AsExecutable();
+            _dbContext = dbContext;
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        [UsePaging, UseOffsetPaging, UseProjection, UseSorting]
+        public IQueryable<UserEntity> GetCurrentUser()
+        {
+            return _dbContext.GetUserCollection().AsQueryable().Where(o => o.Id == ObjectId.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber)));
         }
 
 
-        [UsePaging]
-        [UseOffsetPaging]
-        [UseProjection]
-        [UseSorting]
-
-        public IExecutable<ChatEntity> CurrentUserChats([Service] IDbContext dbContext, [Service] IHttpContextAccessor httpContextAccessor)
+        [UsePaging, UseOffsetPaging, UseProjection, UseSorting]
+        public IQueryable<ChatEntity> GetCurrentUserChats()
         {
-            return dbContext.GetChatCollection().AsQueryable().Where(o => o.Participants.Contains(DbRefFactory.UserRef(ObjectId.Parse(httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber))))).AsExecutable();
+            return _dbContext.GetChatCollection().AsQueryable().Where(o => o.Participants.Contains(DbRefFactory.UserRef(ObjectId.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber)))));
+        }
+
+        [UsePaging, UseOffsetPaging, UseProjection, UseSorting]
+        public async Task<IQueryable<ChatEntity>> GetUserChatByChatId(string chatId, ChatType chatType)
+        {
+            
+            UserEntity user = await _dbContext.TryGetUserEntityByUsername(chatId);
+            IQueryable<ChatEntity> query = GetCurrentUserChats().Where(o => chatType == o.Type);
+            switch (chatType)
+            {
+                case ChatType.Regular:
+                    if (user is UserEntity)
+                    {
+                        return query.Where(o => o.Participants.Contains(DbRefFactory.UserRef(user.Id)));
+                    }
+                    else return Enumerable.Empty<ChatEntity>().AsQueryable();
+
+                case ChatType.Group:
+                    try
+                    {
+                        var tryConvert = Convert.ToUInt64(chatId);
+                        return query.Where(o => o.GroupId == tryConvert);
+                    }
+                    catch (FormatException) { return Enumerable.Empty<ChatEntity>().AsQueryable(); }
+                    catch (OverflowException) { return Enumerable.Empty<ChatEntity>().AsQueryable(); }
+
+                default:
+                return Enumerable.Empty<ChatEntity>().AsQueryable();
+             }
         }
     }
 }

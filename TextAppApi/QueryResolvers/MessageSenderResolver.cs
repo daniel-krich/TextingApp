@@ -20,7 +20,6 @@ namespace TextAppApi.QueryResolvers
         public async Task<UserEntity> GetSender([Parent] MessageEntity message, [Service] IDbContext dbContext)
         {
             return await dbContext.FetchDBRefAsAsync<UserEntity>(message.Sender);
-            //return dbContext.GetUserCollection().AsQueryable().Where(o => o.Id == message.Sender.Id).AsExecutable();
         }
     }
 }

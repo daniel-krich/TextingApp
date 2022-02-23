@@ -21,8 +21,8 @@ namespace TextAppApi.QueryTypes
             descriptor.Field(_ => _.Name).Type<StringType>();
             descriptor.Field(_ => _.Type).Type<EnumType<TextAppData.Enums.ChatType>>();
 
-            descriptor.Field(_ => _.Participants).Type<ListType<UserType>>().UsePaging().UseOffsetPaging().ResolveWith<ParticipantsResolver>(o => o.GetParticipants(default, default));
-            descriptor.Field(_ => _.Messages).Type<ListType<MessageType>>().UsePaging().UseOffsetPaging().ResolveWith<MessagesResolver>(o => o.GetMessages(default, default, default));
+            descriptor.Field(_ => _.Participants).Type<ListType<UserType>>().AddOffsetPagingArguments().ResolveWith<ParticipantsResolver>(o => o.GetParticipants(default, default, default));
+            descriptor.Field(_ => _.Messages).Type<ListType<MessageType>>().AddOffsetPagingArguments().ResolveWith<MessagesResolver>(o => o.GetMessages(default, default, default));
         }
     }
 }

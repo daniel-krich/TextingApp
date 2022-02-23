@@ -15,9 +15,9 @@ namespace TextAppApi.QueryResolvers
 {
     public class ParticipantsResolver
     {
-        public async Task<IExecutable<UserEntity>> GetParticipants([Parent] ChatEntity chat, [Service] IDbContext dbContext)
+        public async Task<IQueryable<UserEntity>> GetParticipants([Parent] ChatEntity chat, [Service] IDbContext dbContext, IResolverContext context)
         {
-            return (await dbContext.FetchDBRefAsAsync<UserEntity>(chat.Participants)).AsExecutable();
+            return (await dbContext.FetchDBRefAsAsync<UserEntity>(chat.Participants)).FilterByContext(context).AsQueryable();
         }
     }
 }
