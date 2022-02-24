@@ -15,8 +15,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="DataAnnotatedModelValidations" Version="2.0.1" />
     <PackageReference Include="HotChocolate.AspNetCore" Version="12.6.0" />
+    <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="12.6.0" />
+    <PackageReference Include="HotChocolate.Data" Version="12.6.0" />
     <PackageReference Include="HotChocolate.Data.MongoDb" Version="12.6.0" />
+    <PackageReference Include="HotChocolate.Types.Filters" Version="12.6.0" />
     <PackageReference Include="HotChocolate.Types.MongoDb" Version="12.6.0" />
     <PackageReference Include="HotChocolate.Types.Scalars" Version="12.6.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.14" />

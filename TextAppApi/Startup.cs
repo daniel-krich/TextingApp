@@ -1,12 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
@@ -15,7 +11,6 @@ using System.Threading.Tasks;
 using TextAppData.DataContext;
 using System.IO;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Rewrite;
 using TextAppApi.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -26,7 +21,7 @@ using HotChocolate.AspNetCore;
 using TextAppApi.QueryTypes;
 using MongoDB.Bson;
 using HotChocolate.Types;
-using TextAppApi.QueryResolvers;
+using TextAppApi.Mutations;
 
 namespace TextAppApi
 {
@@ -98,11 +93,12 @@ namespace TextAppApi
             });
             services.AddHttpContextAccessor();
             services.AddGraphQLServer()
-                .AddQueryType<MongoQuery>()
+                .AddQueryType<DbQueries>()
+                .AddMutationType<DbMutations>()
                 .AddTypes(typeof(ChatType), typeof(UserType), typeof(MessageType), typeof(DBRefType))
-                .AddQueryableCursorPagingProvider()
-                .AddMongoDbProjections()
-                .AddMongoDbSorting();
+                .AddAuthorization();
+
+
 
         }
 
