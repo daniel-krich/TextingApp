@@ -80,7 +80,7 @@ namespace TextAppApi.Controllers
                     string chatId = cEnt.Type == ChatType.Regular ?
                         (from part in participants_filtered
                          where part.Username != user.Username
-                         select part).FirstOrDefault()?.Username : cEnt.GroupId.ToString();
+                         select part).FirstOrDefault()?.Username : cEnt.ChatId.ToString();
 
                     chatsResponse.Add(new ChatResponseModel
                     {
@@ -208,8 +208,8 @@ namespace TextAppApi.Controllers
                     {
                         try
                         {
-                            ulong GroupId = Convert.ToUInt64(chat.ChatId);
-                            var associatedChat = await _dbContext.GetChatCollection().FindAsync(c => c.GroupId == GroupId &&
+                            //ulong GroupId = Convert.ToUInt64(chat.ChatId);
+                            var associatedChat = await _dbContext.GetChatCollection().FindAsync(c => c.ChatId == chat.ChatId/*GroupId*/ &&
                                                                           c.Participants.Contains(DbRefFactory.UserRef(user.Id)));
                             if (await associatedChat.FirstOrDefaultAsync() is ChatEntity chatFound)
                             {

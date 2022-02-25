@@ -9,6 +9,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using TextAppApi.Core;
 using TextAppData.DataContext;
 using TextAppData.DataEntities;
 using TextAppData.Enums;
@@ -38,15 +39,15 @@ namespace TextAppApi.Queries
                 case ChatType.Regular:
                     if (user is UserEntity)
                     {
-                        return query.Where(o => o.Participants.Contains(DbRefFactory.UserRef(user.Id)));
+                        return query.Where(o => user.Id != ObjectId.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber)) && o.Participants.Contains(DbRefFactory.UserRef(user.Id)));
                     }
                     else return Enumerable.Empty<ChatEntity>().AsQueryable();
 
                 case ChatType.Group:
                     try
                     {
-                        var tryConvert = Convert.ToUInt64(chatId);
-                        return query.Where(o => o.GroupId == tryConvert);
+                        //var tryConvert = Convert.ToUInt64(chatId);
+                        return query.Where(o => o.ChatId == chatId/*tryConvert*/);
                     }
                     catch (FormatException) { return Enumerable.Empty<ChatEntity>().AsQueryable(); }
                     catch (OverflowException) { return Enumerable.Empty<ChatEntity>().AsQueryable(); }

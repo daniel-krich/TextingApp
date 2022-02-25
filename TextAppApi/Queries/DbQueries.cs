@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using TextAppData.Enums;
 using System.Diagnostics;
+using TextAppApi.Authentication;
 
 namespace TextAppApi.Queries
 {
@@ -22,10 +23,12 @@ namespace TextAppApi.Queries
     {
         private readonly IDbContext _dbContext;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public DbQueries([Service] IDbContext dbContext, [Service] IHttpContextAccessor httpContextAccessor)
+        private readonly ITokenService _tokenService;
+        public DbQueries([Service] IDbContext dbContext, [Service] IHttpContextAccessor httpContextAccessor, [Service] ITokenService tokenService)
         {
             _dbContext = dbContext;
             _httpContextAccessor = httpContextAccessor;
+            _tokenService = tokenService;
         }
     }
 }

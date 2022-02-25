@@ -88,8 +88,8 @@ namespace TextAppApi.Controllers
                     {
                         try
                         {
-                            ulong GroupId = Convert.ToUInt64(message.ChatId);
-                            var associatedChat = await _dbContext.GetChatCollection().FindAsync(c => c.GroupId == GroupId &&
+                            //ulong GroupId = Convert.ToUInt64(message.ChatId);
+                            var associatedChat = await _dbContext.GetChatCollection().FindAsync(c => c.ChatId == message.ChatId/*GroupId*/ &&
                                                                           c.Participants.Contains(DbRefFactory.UserRef(user.Id)));
                             if (await associatedChat.FirstOrDefaultAsync() is ChatEntity chat)
                             {
@@ -188,7 +188,7 @@ namespace TextAppApi.Controllers
                         string chatId = messageEvent.Chat.Type == ChatType.Regular ?
                             (from part in participants_filtered
                              where part.Username != user.Username
-                             select part).FirstOrDefault()?.Username : messageEvent.Chat.GroupId.ToString();
+                             select part).FirstOrDefault()?.Username : messageEvent.Chat.ChatId.ToString();
 
                         ChatResponseModel responseChat = new ChatResponseModel
                         {

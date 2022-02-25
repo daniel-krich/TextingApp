@@ -22,6 +22,8 @@ using TextAppApi.QueryTypes;
 using MongoDB.Bson;
 using HotChocolate.Types;
 using TextAppApi.Mutations;
+using HotChocolate.Execution.Configuration;
+using TextAppApi.ErrorFilter;
 
 namespace TextAppApi
 {
@@ -93,13 +95,12 @@ namespace TextAppApi
             });
             services.AddHttpContextAccessor();
             services.AddGraphQLServer()
+                .AddInMemorySubscriptions()
+                .AddErrorFilter<GraphQLErrorFilter>()
                 .AddQueryType<DbQueries>()
                 .AddMutationType<DbMutations>()
                 .AddTypes(typeof(ChatType), typeof(UserType), typeof(MessageType), typeof(DBRefType))
                 .AddAuthorization();
-
-
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -133,6 +134,7 @@ namespace TextAppApi
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
+            app.UseWebSockets();
             app.UseRouting();
 
             app.UseAuthentication();

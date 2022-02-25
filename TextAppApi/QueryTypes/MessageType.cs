@@ -18,7 +18,7 @@ namespace TextAppApi.QueryTypes
             descriptor.Field(_ => _.Time).Type<DateTimeType>();
 
 
-            descriptor.Field(_ => _.Sender).ResolveWith<MessageSenderResolver>(o => o.GetSender(default, default));
+            descriptor.Field(_ => _.Sender).ResolveWith<ChatResolver>(o => o.GetSender(default, default));
         }
     }
 }

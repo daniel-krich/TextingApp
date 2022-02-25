@@ -20,7 +20,7 @@ namespace TextAppData.DataEntities
         [BsonRepresentation(BsonType.ObjectId)]
         public ObjectId Id { get; set; }
         public string Name { get; set; }
-        public ulong GroupId { get; set; }
+        public string ChatId { get; set; }
         public ChatType Type { get; set; }
         public IList<MongoDBRef> Participants { get; set; }
         public IList<MongoDBRef> Messages { get; set; }
