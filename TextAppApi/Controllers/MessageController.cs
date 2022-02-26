@@ -57,7 +57,7 @@ namespace TextAppApi.Controllers
                                 await _dbContext.GetMessageCollection().InsertOneAsync(currentMessage);
                                 await _dbContext.GetChatCollection().UpdateOneAsync(c => c.Id == chat.Id,
                                     Builders<ChatEntity>.Update.AddToSet(o => o.Messages, DbRefFactory.MessageRef(currentMessage.Id)));
-                                LongPolling<MessageEvent>.CallEvent(new MessageEvent { Message = currentMessage, Chat = chat });
+                                EventStream<MessageEvent>.CallEvent(new MessageEvent { Message = currentMessage, Chat = chat });
                                 return new ResponseModel("Success", "Message sent successfully").ToString();
                             }
                             else
@@ -75,7 +75,7 @@ namespace TextAppApi.Controllers
                                     Messages = new List<MongoDBRef>() { DbRefFactory.MessageRef(currentMessage.Id) }
                                 };
                                 await _dbContext.GetChatCollection().InsertOneAsync(currentChat);
-                                LongPolling<MessageEvent>.CallEvent(new MessageEvent { Message = currentMessage, Chat = currentChat });
+                                EventStream<MessageEvent>.CallEvent(new MessageEvent { Message = currentMessage, Chat = currentChat });
                                 return new ResponseModel("Success", "New chat has been created, message sent successfully").ToString();
                             }
                         }
@@ -102,7 +102,7 @@ namespace TextAppApi.Controllers
                                 await _dbContext.GetMessageCollection().InsertOneAsync(currentMessage);
                                 await _dbContext.GetChatCollection().UpdateOneAsync(c => c.Id == chat.Id,
                                     Builders<ChatEntity>.Update.AddToSet(o => o.Messages, DbRefFactory.MessageRef(currentMessage.Id)));
-                                LongPolling<MessageEvent>.CallEvent(new MessageEvent { Message = currentMessage, Chat = chat });
+                                EventStream<MessageEvent>.CallEvent(new MessageEvent { Message = currentMessage, Chat = chat });
                                 return new ResponseModel("Success", "Message sent successfully").ToString();
                             }
                             else
@@ -149,7 +149,7 @@ namespace TextAppApi.Controllers
             {
                 do
                 {
-                    LongPolling<MessageEvent> eventPolling = new LongPolling<MessageEvent>(o => o.Chat.Participants.Where(oo => oo.Id == user.Id).FirstOrDefault() != null);
+                    EventStream<MessageEvent> eventPolling = new EventStream<MessageEvent>(o => o.Chat.Participants.Where(oo => oo.Id == user.Id).FirstOrDefault() is not null);
                     MessageEvent messageEvent = await eventPolling.ResolveEvent();
                     if (messageEvent is not null)
                     {

@@ -20,6 +20,11 @@ namespace TextAppData.DataContext
             return new MongoDBRef(DbContext.DbName, DbContext.MessageCollection, objectId);
         }
 
+        public static MongoDBRef UserRef(object p)
+        {
+            throw new NotImplementedException();
+        }
+
         public static MongoDBRef ChatRef(ObjectId objectId)
         {
             return new MongoDBRef(DbContext.DbName, DbContext.ChatCollection, objectId);

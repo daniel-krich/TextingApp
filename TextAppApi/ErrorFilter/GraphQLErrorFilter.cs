@@ -10,7 +10,7 @@ namespace TextAppApi.ErrorFilter
     {
         public IError OnError(IError error)
         {
-            return error.WithMessage(error.Exception.Message ?? error.Message);
+            return error.WithMessage(error.Exception?.Message ?? error.Message);
         }
     }
 }

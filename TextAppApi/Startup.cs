@@ -24,6 +24,7 @@ using HotChocolate.Types;
 using TextAppApi.Mutations;
 using HotChocolate.Execution.Configuration;
 using TextAppApi.ErrorFilter;
+using TextAppApi.Subscriptions;
 
 namespace TextAppApi
 {
@@ -95,10 +96,12 @@ namespace TextAppApi
             });
             services.AddHttpContextAccessor();
             services.AddGraphQLServer()
+                .AddSocketSessionInterceptor<SubscriptionAuthMiddleware>()
                 .AddInMemorySubscriptions()
                 .AddErrorFilter<GraphQLErrorFilter>()
                 .AddQueryType<DbQueries>()
                 .AddMutationType<DbMutations>()
+                .AddSubscriptionType<DbSubscriptions>()
                 .AddTypes(typeof(ChatType), typeof(UserType), typeof(MessageType), typeof(DBRefType))
                 .AddAuthorization();
         }

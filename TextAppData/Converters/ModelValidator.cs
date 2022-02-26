@@ -11,6 +11,7 @@ namespace TextAppData.Converters
     {
         public static IEnumerable<ValidationResult> ValidateWithResults<T>(T model)
         {
+            if (model is null) return Enumerable.Empty<ValidationResult>();
             var context = new ValidationContext(model);
             var results = new List<ValidationResult>();
             Validator.TryValidateObject(model, context, results, true);
@@ -19,6 +20,7 @@ namespace TextAppData.Converters
 
         public static bool Validate<T>(T model)
         {
+            if (model is null) return false;
             var context = new ValidationContext(model);
             return Validator.TryValidateObject(model, context, null, true);
         }

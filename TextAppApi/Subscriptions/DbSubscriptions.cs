@@ -8,21 +8,21 @@ using System.Threading.Tasks;
 using TextAppApi.Authentication;
 using TextAppData.DataContext;
 
-namespace TextAppApi.Mutations
+namespace TextAppApi.Subscriptions
 {
-    public partial class DbMutations
+    public partial class DbSubscriptions
     {
         private readonly IDbContext _dbContext;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITokenService _tokenService;
-        private readonly ITopicEventSender _topicEventSender;
+        private readonly ITopicEventReceiver _topicEventReceiver;
 
-        public DbMutations([Service] IDbContext dbContext, [Service] IHttpContextAccessor httpContextAccessor, [Service] ITokenService tokenService, [Service] ITopicEventSender topicEventSender)
+        public DbSubscriptions([Service] IDbContext dbContext, [Service] IHttpContextAccessor httpContextAccessor, [Service] ITokenService tokenService, [Service] ITopicEventReceiver topicEventReceiver)
         {
             _dbContext = dbContext;
             _httpContextAccessor = httpContextAccessor;
             _tokenService = tokenService;
-            _topicEventSender = topicEventSender;
+            _topicEventReceiver = topicEventReceiver;
         }
     }
 }

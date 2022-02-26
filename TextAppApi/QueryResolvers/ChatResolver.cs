@@ -36,7 +36,6 @@ namespace TextAppApi.QueryResolvers
             return await dbContext.FetchDBRefAsAsync<UserEntity>(message.Sender);
         }
 
-        [Authorize]
         public async Task<string> GetChatId([Parent] ChatEntity chat, [Service] IDbContext dbContext, [Service] IHttpContextAccessor httpContextAccessor)
         {
             switch(chat.Type)

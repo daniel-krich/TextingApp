@@ -6,16 +6,16 @@ using System.Threading.Tasks;
 
 namespace TextAppApi.Core
 {
-    public class LongPolling<T>
+    public class EventStream<T>
     {
-        private static IList<LongPolling<T>> LongPollingQueue { get; set; } = new List<LongPolling<T>>();
+        private static IList<EventStream<T>> LongPollingQueue { get; set; } = new List<EventStream<T>>();
         //
         private T _data;
         private Predicate<T> _predicate;
         private int _delaytimeout;
         private TaskCompletionSource<bool> _taskCompletion;
 
-        public LongPolling(Predicate<T> predicate, int delay = 15000)
+        public EventStream(Predicate<T> predicate, int delay = 15000)
         {
             _predicate = predicate;
             _delaytimeout = delay;
@@ -53,7 +53,7 @@ namespace TextAppApi.Core
             {
                 for(int i = LongPollingQueue.Count - 1; i >= 0; i--) // start from the end, otherwise only one event will be called all the time.
                 {
-                    if (LongPollingQueue[i] is LongPolling<T>)
+                    if (LongPollingQueue[i] is EventStream<T>)
                     {
                         LongPollingQueue[i].CallEventResolve(long_event);
                         //Trace.WriteLine("Resolving event ok...");
