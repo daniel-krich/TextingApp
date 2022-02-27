@@ -1,6 +1,7 @@
+import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import { makeAutoObservable, runInAction } from 'mobx';
 import React from 'react';
-import { Ajax, TokenStore, Consts, NotifyService } from '../'
+import { Ajax, TokenStore, Consts, NotifyService, USER_INFO, createApolloClient } from '../'
 
 interface ResponseModel {
     ErrorId: number | undefined,
@@ -21,7 +22,10 @@ export interface LoginTokenResponse {
 
 export class Auth {
     account: LoginTokenResponse;
-    constructor(notify: NotifyService){
+    apollo: ApolloClient<NormalizedCacheObject>;
+    constructor(notify: NotifyService,
+                apollo: ApolloClient<NormalizedCacheObject>){
+        this.apollo = {} as ApolloClient<NormalizedCacheObject>;
         this.account = {} as LoginTokenResponse;
         makeAutoObservable(this);
     }
@@ -53,6 +57,8 @@ export class Auth {
     async accountLoginToken() {
         if(TokenStore.token != null && TokenStore.token != undefined && this.isLogged == false)
         {
+            this.apollo = createApolloClient(TokenStore.token);
+            this.apollo.query({query: USER_INFO}).then(o => console.log(o.data["user"]["username"]));
             var res = await (await Ajax.Get(Consts.URL + '/api/user/refresh', true).response).json() as LoginTokenResponse;
             runInAction(() => this.account = res);
             if(!this.isLogged)

@@ -6,3 +6,4 @@ export * from './eventStream';
 export * from './const';
 export * from './auth';
 export * from './notifications';
+export * from './apolloClient';
