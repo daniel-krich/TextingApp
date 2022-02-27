@@ -3,6 +3,7 @@ using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -46,9 +47,12 @@ namespace TextAppApi.Mutations
                                 await _dbContext.GetChatCollection().UpdateOneAsync(c => c.Id == chat.Id,
                                     Builders<ChatEntity>.Update.AddToSet(o => o.Messages, DbRefFactory.MessageRef(currentMessage.Id)));
                                 var currentChat = (await _dbContext.GetChatCollection().FindAsync(c => c.Id == chat.Id)).FirstOrDefault();
+
+                                // Send new chat event to the participants over ws
+                                foreach (var participant in currentChat.Participants)
+                                    await _topicEventSender.SendAsync($"{nameof(DbSubscriptions.ListenChatUpdates)}_{participant.Id}", currentChat);
                                 //
-                                await _topicEventSender.SendAsync(nameof(DbSubscriptions.ListenChatUpdates), currentChat);
-                                //
+
                                 return currentChat;
                             }
                             else
@@ -66,15 +70,18 @@ namespace TextAppApi.Mutations
                                     Messages = new List<MongoDBRef>() { DbRefFactory.MessageRef(currentMessage.Id) }
                                 };
                                 await _dbContext.GetChatCollection().InsertOneAsync(currentChat);
+
+                                // Send new chat event to the participants over ws
+                                foreach (var participant in currentChat.Participants)
+                                    await _topicEventSender.SendAsync($"{nameof(DbSubscriptions.ListenChatUpdates)}_{participant.Id}", currentChat);
                                 //
-                                await _topicEventSender.SendAsync(nameof(DbSubscriptions.ListenChatUpdates), currentChat);
-                                //
+
                                 return currentChat;
                             }
                         }
                         else
                         {
-                            throw new ApplicationException("Couldn't find the user.");
+                            throw new ApplicationException("Couldn't find the user, or you're trying to message yourself.");
                         }
                     }
                     else if (message.TypeChat == ChatType.Group)
@@ -93,9 +100,12 @@ namespace TextAppApi.Mutations
                             await _dbContext.GetChatCollection().UpdateOneAsync(c => c.Id == chat.Id,
                                 Builders<ChatEntity>.Update.AddToSet(o => o.Messages, DbRefFactory.MessageRef(currentMessage.Id)));
                             var currentChat = (await _dbContext.GetChatCollection().FindAsync(c => c.Id == chat.Id)).FirstOrDefault();
+
+                            // Send new chat event to the participants over ws
+                            foreach (var participant in currentChat.Participants)
+                                await _topicEventSender.SendAsync($"{nameof(DbSubscriptions.ListenChatUpdates)}_{participant.Id}", currentChat);
                             //
-                            await _topicEventSender.SendAsync(nameof(DbSubscriptions.ListenChatUpdates), currentChat);
-                            //
+
                             return currentChat;
                         }
                         else
