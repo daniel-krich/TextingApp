@@ -13,6 +13,7 @@ using TextAppApi.Core;
 using TextAppData.DataContext;
 using TextAppData.DataEntities;
 using TextAppData.Enums;
+using TextAppData.Helpers;
 
 namespace TextAppApi.Queries
 {
@@ -20,40 +21,57 @@ namespace TextAppApi.Queries
     {
         [Authorize]
         [UseOffsetPaging(DefaultPageSize = 15)]
-        public IQueryable<ChatEntity> GetUserChats()
+        public async Task<IQueryable<ChatEntity>> GetUserChats()
         {
-            return _dbContext.GetChatCollection()
+            var sessionId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Sid);
+            var User = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), sessionId);
+            if (User is UserEntity)
+            {
+                return _dbContext.GetChatCollection()
                     .AsQueryable()
-                    .Where(o => o.Participants.Contains(DbRefFactory.UserRef(ObjectId.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber)))));
+                    .Where(o => o.Participants.Contains(DbRefFactory.UserRef(User.Id)));
+            }
+            else
+            {
+                throw new ApplicationException("Session Expired");
+            }
         }
 
         [Authorize]
         [UseOffsetPaging(DefaultPageSize = 15)]
         public async Task<IQueryable<ChatEntity>> GetUserChatByChatId([Required] string chatId, [Required] ChatType chatType)
         {
-
-            UserEntity user = await _dbContext.TryGetUserEntityByUsername(chatId);
-            IQueryable<ChatEntity> query = GetUserChats().Where(o => chatType == o.Type);
-            switch (chatType)
+            var sessionId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Sid);
+            var User = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), sessionId);
+            if (User is UserEntity)
             {
-                case ChatType.Regular:
-                    if (user is UserEntity)
-                    {
-                        return query.Where(o => user.Id != ObjectId.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber)) && o.Participants.Contains(DbRefFactory.UserRef(user.Id)));
-                    }
-                    else return Enumerable.Empty<ChatEntity>().AsQueryable();
+                UserEntity user = await _dbContext.GetUserCollection().TryGetUserEntityByUsername(chatId);
+                IQueryable<ChatEntity> query = (await GetUserChats()).Where(o => chatType == o.Type);
+                switch (chatType)
+                {
+                    case ChatType.Regular:
+                        if (user is UserEntity)
+                        {
+                            return query.Where(o => user.Id != ObjectId.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber)) && o.Participants.Contains(DbRefFactory.UserRef(user.Id)));
+                        }
+                        else return Enumerable.Empty<ChatEntity>().AsQueryable();
 
-                case ChatType.Group:
-                    try
-                    {
-                        //var tryConvert = Convert.ToUInt64(chatId);
-                        return query.Where(o => o.ChatId == chatId/*tryConvert*/);
-                    }
-                    catch (FormatException) { return Enumerable.Empty<ChatEntity>().AsQueryable(); }
-                    catch (OverflowException) { return Enumerable.Empty<ChatEntity>().AsQueryable(); }
+                    case ChatType.Group:
+                        try
+                        {
+                            //var tryConvert = Convert.ToUInt64(chatId);
+                            return query.Where(o => o.ChatId == chatId/*tryConvert*/);
+                        }
+                        catch (FormatException) { return Enumerable.Empty<ChatEntity>().AsQueryable(); }
+                        catch (OverflowException) { return Enumerable.Empty<ChatEntity>().AsQueryable(); }
 
-                default:
-                    return Enumerable.Empty<ChatEntity>().AsQueryable();
+                    default:
+                        return Enumerable.Empty<ChatEntity>().AsQueryable();
+                }
+            }
+            else
+            {
+                throw new ApplicationException("Session Expired");
             }
         }
     }

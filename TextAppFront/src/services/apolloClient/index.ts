@@ -7,7 +7,18 @@ import {
     NormalizedCacheObject
 } from "@apollo/client";
 
-export function createApolloClient(jwt: string): ApolloClient<NormalizedCacheObject> {
+export class Apollo {
+    instance: ApolloClient<NormalizedCacheObject>;
+    constructor(){
+        this.instance = createApolloClient("");
+    }
+
+    setJWT(jwt: string) {
+        this.instance = createApolloClient(jwt);
+    }
+}
+
+function createApolloClient(jwt: string): ApolloClient<NormalizedCacheObject> {
     if(jwt.length > 0) {
         return new ApolloClient({
             uri: 'https://localhost:44310/graphql',

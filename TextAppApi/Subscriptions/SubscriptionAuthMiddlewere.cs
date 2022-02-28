@@ -47,10 +47,10 @@ namespace TextAppApi.Subscriptions
         {
             return new ValueTask();
         }
+
         public ValueTask OnRequestAsync(ISocketConnection connection, IQueryRequestBuilder requestBuilder, CancellationToken cancellationToken)
         {
             return new ValueTask();
         }
-        
     }
 }

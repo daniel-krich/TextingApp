@@ -47,12 +47,12 @@ namespace TextAppData.DataContext
             bool createSessionIndexes = !await (await GetSessionCollection().Indexes.ListAsync()).AnyAsync();
             if (createSessionIndexes) // Create unique indexes only if they doesn't exist
             {
-                var indexUniqueToken = new CreateIndexModel<SessionEntity>(Builders<SessionEntity>.IndexKeys.Ascending(x => x.Token), new CreateIndexOptions<SessionEntity>() { Collation = new Collation(locale: "en", strength: CollationStrength.Secondary), Unique = true });
-                var indexKeysExpire = Builders<SessionEntity>.IndexKeys.Ascending(o => o.ExpiresAt);
-                var indexOptions = new CreateIndexOptions {  ExpireAfter = new TimeSpan(days: 14, 0,0,0) };
+                //var indexUniqueToken = new CreateIndexModel<SessionEntity>(Builders<SessionEntity>.IndexKeys.Ascending(x => x.Token), new CreateIndexOptions<SessionEntity>() { Collation = new Collation(locale: "en", strength: CollationStrength.Secondary), Unique = true });
+                var indexKeysExpire = Builders<SessionEntity>.IndexKeys.Ascending(o => o.ExpireAt);
+                var indexOptions = new CreateIndexOptions {  ExpireAfter = new TimeSpan(days: 7, 0,0,0) };
                 var indexModel = new CreateIndexModel<SessionEntity>(indexKeysExpire, indexOptions);
                 await GetSessionCollection().Indexes.CreateOneAsync(indexModel);
-                await GetSessionCollection().Indexes.CreateOneAsync(indexUniqueToken);
+                //await GetSessionCollection().Indexes.CreateOneAsync(indexUniqueToken);
                 //Trace.WriteLine("Created default indexes");
             }
         }
@@ -84,70 +84,6 @@ namespace TextAppData.DataContext
         public IMongoCollection<SessionEntity> GetSessionCollection()
         {
             return this._database.GetCollection<SessionEntity>(SessionCollection);
-        }
-
-        public async Task<TDocument> FetchDBRefAsAsync<TDocument>(MongoDBRef dbRef)
-        {
-            var collection = this._database.GetCollection<TDocument>(dbRef.CollectionName);
-            var query = Builders<TDocument>.Filter.Eq(nameof(MongoDBRef.Id), dbRef.Id);
-            return await (await collection.FindAsync(query)).FirstOrDefaultAsync();
-        }
-
-        public async Task<IEnumerable<TDocument>> FetchDBRefAsAsync<TDocument>(IList<MongoDBRef> dbRefs)
-        {
-            if (dbRefs.Any())
-            {
-                var collection = this._database.GetCollection<TDocument>(dbRefs.FirstOrDefault().CollectionName);
-                var query = Builders<TDocument>.Filter.In(nameof(MongoDBRef.Id), dbRefs.Select(x => x.Id));
-                return (await collection.FindAsync(query)).ToEnumerable();
-            }
-            else return new List<TDocument>();
-        }
-
-        public async Task<UserEntity> TryGetUserEntityBySessionToken(string token)
-        {
-            var session = await GetSessionCollection().FindAsync(o => o.Token == token);
-            if (await session.FirstOrDefaultAsync() is SessionEntity sess)
-            {
-                var res = await GetUserCollection().FindAsync(o => o.Id == sess.User.Id);
-                if (await res.FirstOrDefaultAsync() is UserEntity model)
-                    return model;
-            }
-            return null;
-        }
-
-        public async Task<UserEntity> TryGetUserEntityByCredentials(string username, string password)
-        {
-            var res = await GetUserCollection().FindAsync(o => o.Username == username && o.Password == password);
-            if (await res.FirstOrDefaultAsync() is UserEntity model)
-                return model;
-            else
-                return null;
-        }
-
-        public async Task<UserEntity> TryGetUserEntityById(string id)
-        {
-            try
-            {
-                var res = await GetUserCollection().FindAsync(o => o.Id == ObjectId.Parse(id));
-                if (await res.FirstOrDefaultAsync() is UserEntity model)
-                    return model;
-                else
-                    return null;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public async Task<UserEntity> TryGetUserEntityByUsername(string username)
-        {
-            var res = await GetUserCollection().FindAsync(o => o.Username == username);
-            if (await res.FirstOrDefaultAsync() is UserEntity model)
-                return model;
-            else
-                return null;
         }
     }
 }

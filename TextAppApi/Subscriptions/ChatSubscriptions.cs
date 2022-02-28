@@ -15,21 +15,25 @@ using TextAppApi.Authentication;
 using TextAppApi.Core;
 using TextAppData.DataContext;
 using TextAppData.DataEntities;
+using TextAppData.Helpers;
 
 namespace TextAppApi.Subscriptions
 {
     public partial class DbSubscriptions
     {
-
         [SubscribeAndResolve]
-        public ValueTask<ISourceStream<ChatEntity>> ListenChatUpdates()
+        public async ValueTask<ISourceStream<ChatEntity>> ListenChatUpdates()
         {
-            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber);
-            if (userId is not null)
-                return _topicEventReceiver.SubscribeAsync<string, ChatEntity>($"{nameof(ListenChatUpdates)}_{userId}");
+            var sessionId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Sid);
+            var User = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), sessionId);
+            if (User is UserEntity)
+            {
+                return await _topicEventReceiver.SubscribeAsync<string, ChatEntity>($"{nameof(ListenChatUpdates)}_{User.Id}");
+            }
             else
+            {
                 return default;
+            }
         }
-
     }
 }

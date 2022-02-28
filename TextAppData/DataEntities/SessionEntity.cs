@@ -17,8 +17,7 @@ namespace TextAppData.DataEntities
         [BsonRepresentation(BsonType.ObjectId)]
         public ObjectId Id { get; set; }
         [BsonRepresentation(BsonType.DateTime)]
-        public DateTime ExpiresAt { get; set; }
-        public string Token { get; set; }
+        public DateTime ExpireAt { get; set; }
         public MongoDBRef User { get; set; }
     }
 }

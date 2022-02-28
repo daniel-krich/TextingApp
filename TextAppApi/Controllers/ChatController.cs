@@ -36,7 +36,7 @@ namespace TextAppApi.Controllers
         [Authorize]
         public async Task<string> GetChats()
         {
-            var res = await _dbContext.TryGetUserEntityById(this.User.FindFirstValue(ClaimTypes.SerialNumber));
+            var res = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), this.User.FindFirstValue(ClaimTypes.Sid));
             if (res is UserEntity user)
             {
                 var associatedChats = await _dbContext.GetChatCollection().FindAsync(o => o.Participants.Contains(DbRefFactory.UserRef(user.Id)));
@@ -45,8 +45,8 @@ namespace TextAppApi.Controllers
                 foreach (ChatEntity cEnt in chats)
                 {
                     // Create output json with last message and sender basic info
-                    var messageFromRef_unsafe = await _dbContext.FetchDBRefAsAsync<MessageEntity>(cEnt.Messages.LastOrDefault());
-                    var userFromRef_unsafe = await _dbContext.FetchDBRefAsAsync<UserEntity>(messageFromRef_unsafe.Sender); // contains passwords etc!
+                    var messageFromRef_unsafe = await _dbContext.GetMessageCollection().FetchDBRefAsAsync(cEnt.Messages.LastOrDefault());
+                    var userFromRef_unsafe = await _dbContext.GetUserCollection().FetchDBRefAsAsync(messageFromRef_unsafe.Sender); // contains passwords etc!
                     UserResponseModel userResponse = new UserResponseModel
                     {
                         Username = userFromRef_unsafe.Username,
@@ -62,7 +62,7 @@ namespace TextAppApi.Controllers
                     //
 
                     // Create output json list with participants basic information
-                    var participants_unsafe = await _dbContext.FetchDBRefAsAsync<UserEntity>(cEnt.Participants); // contains passwords etc!
+                    var participants_unsafe = await _dbContext.GetUserCollection().FetchDBRefAsAsync(cEnt.Participants); // contains passwords etc!
                     List<UserResponseModel> participants_filtered = new List<UserResponseModel>();
                     foreach (UserEntity userCurr in participants_unsafe)
                     {
@@ -103,10 +103,10 @@ namespace TextAppApi.Controllers
         [Authorize]
         public async Task<string> GetChatContactInfo([FromBody] GetChatContactModel chat)
         {
-            var res = await _dbContext.TryGetUserEntityById(this.User.FindFirstValue(ClaimTypes.SerialNumber));
+            var res = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), this.User.FindFirstValue(ClaimTypes.Sid));
             if (res is UserEntity user)
             {
-                var finduser = await _dbContext.TryGetUserEntityByUsername(chat.ChatId);
+                var finduser = await _dbContext.GetUserCollection().TryGetUserEntityByUsername(chat.ChatId);
                 if (finduser is UserEntity founduser)
                 {
                     IList<UserResponseModel> userResponses = new List<UserResponseModel>();
@@ -145,14 +145,14 @@ namespace TextAppApi.Controllers
         [Authorize]
         public async Task<string> GetChatMessagesOffset([FromBody] GetChatMessagesModel chat)
         {
-            var res = await _dbContext.TryGetUserEntityById(this.User.FindFirstValue(ClaimTypes.SerialNumber));
+            var res = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), this.User.FindFirstValue(ClaimTypes.Sid));
             if (res is UserEntity user)
             {
                 if (chat.ChatId.Length > 0)
                 {
                     if (chat.TypeChat == ChatType.Regular)
                     {
-                        var finduser = await _dbContext.TryGetUserEntityByUsername(chat.ChatId);
+                        var finduser = await _dbContext.GetUserCollection().TryGetUserEntityByUsername(chat.ChatId);
                         if (finduser is UserEntity founduser)
                         {
                             var associatedChat = await _dbContext.GetChatCollection().FindAsync(o => o.Type == ChatType.Regular &&
@@ -161,11 +161,11 @@ namespace TextAppApi.Controllers
                             if (await associatedChat.FirstOrDefaultAsync() is ChatEntity chatFound)
                             {
 
-                                var messages_Unfiltered = await _dbContext.FetchDBRefAsAsync<MessageEntity>(chatFound.Messages.Reverse().Skip(chat.MessageOffset).Take(AmountOfMessagesAtOnce).ToList());
+                                var messages_Unfiltered = await _dbContext.GetMessageCollection().FetchDBRefAsAsync(chatFound.Messages.Reverse().Skip(chat.MessageOffset).Take(AmountOfMessagesAtOnce).ToList());
                                 IList<MessageResponseModel> messages = new List<MessageResponseModel>();
                                 foreach (MessageEntity messageEntity in messages_Unfiltered)
                                 {
-                                    var sender_entity_unsafe = await _dbContext.FetchDBRefAsAsync<UserEntity>(messageEntity.Sender);
+                                    var sender_entity_unsafe = await _dbContext.GetUserCollection().FetchDBRefAsAsync(messageEntity.Sender);
                                     var sender = new UserResponseModel
                                     {
                                         Username = sender_entity_unsafe.Username,
@@ -213,11 +213,11 @@ namespace TextAppApi.Controllers
                                                                           c.Participants.Contains(DbRefFactory.UserRef(user.Id)));
                             if (await associatedChat.FirstOrDefaultAsync() is ChatEntity chatFound)
                             {
-                                var messages_Unfiltered = await _dbContext.FetchDBRefAsAsync<MessageEntity>(chatFound.Messages.Reverse().Skip(chat.MessageOffset).Take(AmountOfMessagesAtOnce).ToList());
+                                var messages_Unfiltered = await _dbContext.GetMessageCollection().FetchDBRefAsAsync(chatFound.Messages.Reverse().Skip(chat.MessageOffset).Take(AmountOfMessagesAtOnce).ToList());
                                 IList<MessageResponseModel> messages = new List<MessageResponseModel>();
                                 foreach (MessageEntity messageEntity in messages_Unfiltered)
                                 {
-                                    var sender_entity_unsafe = await _dbContext.FetchDBRefAsAsync<UserEntity>(messageEntity.Sender);
+                                    var sender_entity_unsafe = await _dbContext.GetUserCollection().FetchDBRefAsAsync(messageEntity.Sender);
                                     var sender = new UserResponseModel
                                     {
                                         Username = sender_entity_unsafe.Username,

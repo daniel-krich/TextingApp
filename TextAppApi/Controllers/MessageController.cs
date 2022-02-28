@@ -13,6 +13,7 @@ using TextAppApi.Core;
 using TextAppData.DataContext;
 using TextAppData.DataEntities;
 using TextAppData.Enums;
+using TextAppData.Helpers;
 using TextAppData.Models;
 using TextAppData.ResponseModels;
 
@@ -33,14 +34,14 @@ namespace TextAppApi.Controllers
         [Authorize]
         public async Task<string> PushMessage([FromBody] PushMessageModel message)
         {
-            var res = await _dbContext.TryGetUserEntityById(this.User.FindFirstValue(ClaimTypes.SerialNumber));
+            var res = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), this.User.FindFirstValue(ClaimTypes.Sid));
             if (res is UserEntity user)
             {
                 if (message.ChatId.Length > 0)
                 {
                     if (message.TypeChat == ChatType.Regular)
                     {
-                        var finduser = await _dbContext.TryGetUserEntityByUsername(message.ChatId);
+                        var finduser = await _dbContext.GetUserCollection().TryGetUserEntityByUsername(message.ChatId);
                         if (finduser is UserEntity founduser && founduser.Id != user.Id) // can't message to yourself
                         {
                             var associatedChat = await _dbContext.GetChatCollection().FindAsync(o => o.Type == ChatType.Regular && 
@@ -144,7 +145,7 @@ namespace TextAppApi.Controllers
         public async Task RetrieveMessageEvent()
         {
             Response.ContentType = "text/event-stream";
-            var res = await _dbContext.TryGetUserEntityById(this.User.FindFirstValue(ClaimTypes.SerialNumber));
+            var res = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), this.User.FindFirstValue(ClaimTypes.Sid));
             if (res is UserEntity user)
             {
                 do
@@ -154,7 +155,7 @@ namespace TextAppApi.Controllers
                     if (messageEvent is not null)
                     {
                         // Create output json with last message and sender basic info
-                        var userFromRef_unsafe = await _dbContext.FetchDBRefAsAsync<UserEntity>(messageEvent.Message.Sender); // contains passwords etc!
+                        var userFromRef_unsafe = await _dbContext.GetUserCollection().FetchDBRefAsAsync(messageEvent.Message.Sender); // contains passwords etc!
                         UserResponseModel userResponse = new UserResponseModel
                         {
                             Username = userFromRef_unsafe.Username,
@@ -170,7 +171,7 @@ namespace TextAppApi.Controllers
                         //
 
                         // Create output json list with participants basic information
-                        var participants_unsafe = await _dbContext.FetchDBRefAsAsync<UserEntity>(messageEvent.Chat.Participants); // contains passwords etc!
+                        var participants_unsafe = await _dbContext.GetUserCollection().FetchDBRefAsAsync(messageEvent.Chat.Participants); // contains passwords etc!
                         List<UserResponseModel> participants_filtered = new List<UserResponseModel>();
                         foreach (UserEntity userCurr in participants_unsafe)
                         {

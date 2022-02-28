@@ -36,7 +36,7 @@ namespace TextAppApi.Controllers
         [Authorize]
         public async Task<string> AuthByToken()
         {
-            var res = await _dbContext.TryGetUserEntityById(this.User.FindFirstValue(ClaimTypes.SerialNumber));
+            var res = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), this.User.FindFirstValue(ClaimTypes.Sid));
             if (res is UserEntity model)
             {
                 return ModelConverter.Convert<AuthWithTokenResponseModel>(model).ToString();
@@ -50,20 +50,17 @@ namespace TextAppApi.Controllers
         [HttpPost("login")]
         public async Task<string> AuthByUsernamePass([FromBody] LoginModel user)
         {
-            var res = await _dbContext.TryGetUserEntityByCredentials(user.Username, user.Password);
+            var res = await _dbContext.GetUserCollection().TryGetUserEntityByCredentials(user.Username, user.Password);
             if (res is UserEntity model)
             {
-                var claims = new List<Claim>
+
+                var sessionId = await _dbContext.GetSessionCollection().CreateSessionId(model);
+                var accessToken = _tokenService.GenerateAccessToken(new List<Claim>
                 {
-                    new Claim(ClaimTypes.SerialNumber, model.Id.ToString()),
-                    new Claim(ClaimTypes.Name, model.Username)
-                };
+                    new Claim(ClaimTypes.Sid, sessionId)
+                });
 
-                var accessToken = _tokenService.GenerateAccessToken(claims);
-
-                return new AuthResponseModel {
-                    AccessToken = accessToken
-                }.ToString();
+                return new AuthResponseModel { AccessToken = accessToken }.ToString();
             }
             else
             {
@@ -95,7 +92,7 @@ namespace TextAppApi.Controllers
         public async Task<string> SearchUsers([FromBody] SearchUsersModel search)
         {
 
-            var res = await _dbContext.TryGetUserEntityById(this.User.FindFirstValue(ClaimTypes.SerialNumber));
+            var res = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), this.User.FindFirstValue(ClaimTypes.Sid));
             if (res is UserEntity user)
             {
                 var usersResult = (await _dbContext.GetUserCollection().FindAsync(o => o.Username.ToLower().Contains(search.Query.ToLower()) || o.FirstName.ToLower().Contains(search.Query.ToLower()) || o.LastName.ToLower().Contains(search.Query.ToLower()))).ToEnumerable().Take(50);
@@ -119,10 +116,10 @@ namespace TextAppApi.Controllers
         public async Task<string> FindUser([FromBody] SearchUsersModel search)
         {
 
-            var res = await _dbContext.TryGetUserEntityById(this.User.FindFirstValue(ClaimTypes.SerialNumber));
+            var res = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), this.User.FindFirstValue(ClaimTypes.Sid));
             if (res is UserEntity user)
             {
-                var userRes = await _dbContext.TryGetUserEntityByUsername(search.Query);
+                var userRes = await _dbContext.GetUserCollection().TryGetUserEntityByUsername(search.Query);
                 if (userRes is UserEntity foundUser)
                 {
                     UserResponseModel userResponseModel = new UserResponseModel()

@@ -13,6 +13,7 @@ using TextAppData.Converters;
 using TextAppData.DataContext;
 using TextAppData.DataEntities;
 using TextAppData.Enums;
+using TextAppData.Helpers;
 using TextAppData.Models;
 
 namespace TextAppApi.Queries
@@ -20,24 +21,31 @@ namespace TextAppApi.Queries
     public partial class DbQueries
     {
         [Authorize]
-        public UserEntity GetUser()
+        public async Task<UserEntity> GetUser()
         {
-            return _dbContext.GetUserCollection()
-                    .AsQueryable()
-                    .Where(o => o.Id == ObjectId.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber))).FirstOrDefault();
+            var sessionId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Sid);
+            var User = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), sessionId);
+            if (User is UserEntity)
+            {
+                return User;
+            }
+            else
+            {
+                throw new ApplicationException("Session Expired");
+            }
         }
 
         public async Task<string> Login(LoginModel login)
         {
             if (ModelValidator.Validate(login))
             {
-                var res = await _dbContext.TryGetUserEntityByCredentials(login.Username, login.Password);
+                var res = await _dbContext.GetUserCollection().TryGetUserEntityByCredentials(login.Username, login.Password);
                 if (res is UserEntity model)
                 {
+                    var sessionId = await _dbContext.GetSessionCollection().CreateSessionId(model);
                     return _tokenService.GenerateAccessToken(new List<Claim>
                     {
-                        new Claim(ClaimTypes.SerialNumber, model.Id.ToString()),
-                        new Claim(ClaimTypes.Name, model.Username)
+                        new Claim(ClaimTypes.Sid, sessionId)
                     });
                 }
                 else
@@ -52,15 +60,24 @@ namespace TextAppApi.Queries
         }
 
         [Authorize]
-        public IQueryable<UserEntity> SearchUser([Required] string name, [Required] bool exact)
+        public async Task<IQueryable<UserEntity>> SearchUser([Required] string name, [Required] bool exact)
         {
-            if(exact)
+            var sessionId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Sid);
+            var User = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), sessionId);
+            if (User is UserEntity)
             {
-                return _dbContext.GetUserCollection().AsQueryable().Where(o => o.Username == name);
+                if (exact)
+                {
+                    return _dbContext.GetUserCollection().AsQueryable().Where(o => o.Username == name);
+                }
+                else
+                {
+                    return _dbContext.GetUserCollection().AsQueryable().Where(o => o.Username.Contains(name) || o.FirstName.Contains(name) || o.LastName.Contains(name));
+                }
             }
             else
             {
-                return _dbContext.GetUserCollection().AsQueryable().Where(o => o.Username.Contains(name) || o.FirstName.Contains(name) || o.LastName.Contains(name));
+                throw new ApplicationException("Session Expired");
             }
         }
     }

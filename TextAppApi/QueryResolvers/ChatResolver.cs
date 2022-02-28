@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using TextAppData.DataContext;
 using TextAppData.DataEntities;
 using TextAppData.Enums;
+using TextAppData.Helpers;
 
 namespace TextAppApi.QueryResolvers
 {
@@ -22,18 +23,18 @@ namespace TextAppApi.QueryResolvers
         [UseOffsetPaging(DefaultPageSize = 15)]
         public async Task<IQueryable<UserEntity>> GetParticipants([Parent] ChatEntity chat, [Service] IDbContext dbContext)
         {
-            return (await dbContext.FetchDBRefAsAsync<UserEntity>(chat.Participants)).AsQueryable();
+            return (await dbContext.GetUserCollection().FetchDBRefAsAsync(chat.Participants)).AsQueryable();
         }
 
         [UseOffsetPaging(DefaultPageSize = 15)]
         public async Task<IQueryable<MessageEntity>> GetMessages([Parent] ChatEntity chat, [Service] IDbContext dbContext)
         {
-            return (await dbContext.FetchDBRefAsAsync<MessageEntity>(chat.Messages)).AsQueryable();
+            return (await dbContext.GetMessageCollection().FetchDBRefAsAsync(chat.Messages)).AsQueryable();
         }
 
         public async Task<UserEntity> GetSender([Parent] MessageEntity message, [Service] IDbContext dbContext)
         {
-            return await dbContext.FetchDBRefAsAsync<UserEntity>(message.Sender);
+            return await dbContext.GetUserCollection().FetchDBRefAsAsync(message.Sender);
         }
 
         public async Task<string> GetChatId([Parent] ChatEntity chat, [Service] IDbContext dbContext, [Service] IHttpContextAccessor httpContextAccessor)
@@ -41,7 +42,7 @@ namespace TextAppApi.QueryResolvers
             switch(chat.Type)
             {
                 case ChatType.Regular:
-                    return (await dbContext.FetchDBRefAsAsync<UserEntity>(chat.Participants.Where(o => o.Id != ObjectId.Parse(httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber))).FirstOrDefault())).Username;
+                    return (await dbContext.GetUserCollection().FetchDBRefAsAsync(chat.Participants.Where(o => o.Id != ObjectId.Parse(httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber))).FirstOrDefault())).Username;
                 case ChatType.Group:
                     return chat.ChatId;
                 default:
@@ -51,7 +52,7 @@ namespace TextAppApi.QueryResolvers
 
         public async Task<MessageEntity> GetLastMessage([Parent] ChatEntity chat, [Service] IDbContext dbContext)
         {
-            return await dbContext.FetchDBRefAsAsync<MessageEntity>(chat.Messages.LastOrDefault());
+            return await dbContext.GetMessageCollection().FetchDBRefAsAsync(chat.Messages.LastOrDefault());
         }
 
         public int GetMessagesCount([Parent] ChatEntity chat)

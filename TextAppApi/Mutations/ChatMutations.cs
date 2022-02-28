@@ -12,6 +12,7 @@ using TextAppData.Converters;
 using TextAppData.DataContext;
 using TextAppData.DataEntities;
 using TextAppData.Enums;
+using TextAppData.Helpers;
 using TextAppData.Models;
 
 namespace TextAppApi.Mutations
@@ -23,23 +24,24 @@ namespace TextAppApi.Mutations
         {
             if (ModelValidator.Validate(message))
             {
-                var res = await _dbContext.TryGetUserEntityById(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber));
-                if (res is UserEntity user)
+                var sessionId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Sid);
+                var User = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), sessionId);
+                if (User is UserEntity)
                 {
 
                     if (message.TypeChat == ChatType.Regular)
                     {
-                        var finduser = await _dbContext.TryGetUserEntityByUsername(message.ChatId);
-                        if (finduser is UserEntity founduser && founduser.Id != user.Id) // can't message to yourself
+                        var finduser = await _dbContext.GetUserCollection().TryGetUserEntityByUsername(message.ChatId);
+                        if (finduser is UserEntity founduser && founduser.Id != User.Id) // can't message to yourself
                         {
                             var associatedChat = await _dbContext.GetChatCollection().FindAsync(o => o.Type == ChatType.Regular &&
                                                                     o.Participants.Contains(DbRefFactory.UserRef(founduser.Id)) &&
-                                                                    o.Participants.Contains(DbRefFactory.UserRef(user.Id)));
+                                                                    o.Participants.Contains(DbRefFactory.UserRef(User.Id)));
                             if (await associatedChat.FirstOrDefaultAsync() is ChatEntity chat)
                             {
                                 MessageEntity currentMessage = new MessageEntity
                                 {
-                                    Sender = DbRefFactory.UserRef(user.Id),
+                                    Sender = DbRefFactory.UserRef(User.Id),
                                     Time = DateTime.Now,
                                     Message = message.Message
                                 };
@@ -59,14 +61,14 @@ namespace TextAppApi.Mutations
                             {
                                 MessageEntity currentMessage = new MessageEntity
                                 {
-                                    Sender = DbRefFactory.UserRef(user.Id),
+                                    Sender = DbRefFactory.UserRef(User.Id),
                                     Time = DateTime.Now,
                                     Message = message.Message
                                 };
                                 await _dbContext.GetMessageCollection().InsertOneAsync(currentMessage); // insert first, then we can use the ref with the id.
                                 ChatEntity currentChat = new ChatEntity
                                 {
-                                    Participants = new List<MongoDBRef>() { DbRefFactory.UserRef(user.Id), DbRefFactory.UserRef(founduser.Id) },
+                                    Participants = new List<MongoDBRef>() { DbRefFactory.UserRef(User.Id), DbRefFactory.UserRef(founduser.Id) },
                                     Messages = new List<MongoDBRef>() { DbRefFactory.MessageRef(currentMessage.Id) }
                                 };
                                 await _dbContext.GetChatCollection().InsertOneAsync(currentChat);
@@ -87,12 +89,12 @@ namespace TextAppApi.Mutations
                     else if (message.TypeChat == ChatType.Group)
                     {
                         var associatedChat = await _dbContext.GetChatCollection().FindAsync(c => c.ChatId == message.ChatId &&
-                                                                        c.Participants.Contains(DbRefFactory.UserRef(user.Id)));
+                                                                        c.Participants.Contains(DbRefFactory.UserRef(User.Id)));
                         if (await associatedChat.FirstOrDefaultAsync() is ChatEntity chat)
                         {
                             MessageEntity currentMessage = new MessageEntity
                             {
-                                Sender = DbRefFactory.UserRef(user.Id),
+                                Sender = DbRefFactory.UserRef(User.Id),
                                 Time = DateTime.Now,
                                 Message = message.Message
                             };
@@ -120,7 +122,7 @@ namespace TextAppApi.Mutations
                 }
                 else
                 {
-                    throw new ApplicationException("Invalid token provided.");
+                    throw new ApplicationException("Session Expired");
                 }
             }
             else
