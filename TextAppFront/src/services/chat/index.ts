@@ -38,7 +38,7 @@ export class Chat {
     currentChat: ChatHistoryStruct | undefined;
     chatPartner: UserChatStruct | undefined;
     constructor(notify: NotifyService){
-        notify.addNotification("init", "chat initiated", "cool stuff, we passed the notification service to other service");
+        //notify.addNotification("init", "chat initiated", "cool stuff, we passed the notification service to other service");
         makeAutoObservable(this);
     }
 

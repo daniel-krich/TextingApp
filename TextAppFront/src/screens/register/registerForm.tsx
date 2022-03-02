@@ -20,13 +20,14 @@ function RegisterFormComp() {
             setValidated(false);
             const responseMod = await globalStore.authService.accountRegister(registerModel.Username, registerModel.Password, 
                 registerModel.Email, registerModel.Firstname, registerModel.Lastname);
-            if(responseMod.ErrorId == undefined) // success
+            if(responseMod[0]) // success
             {
                 navigate('/login');
+                globalStore.notifyService.addNotification("Success", "Register", responseMod[1]);
             }
             else
             {
-                runInAction(() => registerModel.ErrorText = responseMod.Comment);
+                runInAction(() => registerModel.ErrorText = responseMod[1]);
             }
         }
         else

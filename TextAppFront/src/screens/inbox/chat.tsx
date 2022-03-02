@@ -70,7 +70,7 @@ export const Chat = observer(() => {
                 <ListGroup as="ol" className='p-0'>
                     {chatService.currentChat?.Messages?.map((o, index) => 
                         <ListGroup.Item key={index} as="div" className='border-0'>
-                        <div className={`ms-2 me-auto ${o.Sender.Username == user.Username ? 'text-start' : 'text-end'}`}>
+                        <div className={`ms-2 me-auto ${o.Sender.Username == user.username ? 'text-start' : 'text-end'}`}>
                         <div className="fw-bold">{o.Sender.FirstName} {o.Sender.LastName} ({new Date(o.Time).toLocaleDateString()})</div>
                         {o.Message}
                         </div>

@@ -23,9 +23,9 @@ class Profile {
 
     getProfileInfo(user: LoginTokenResponse) {
         runInAction(() => {
-            this.currentUser.Username = user.Username;
-            this.currentUser.FirstName = user.FirstName;
-            this.currentUser.LastName = user.LastName;
+            this.currentUser.Username = user.username;
+            this.currentUser.FirstName = user.firstName;
+            this.currentUser.LastName = user.lastName;
         });
     }
 }

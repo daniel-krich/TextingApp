@@ -10,3 +10,9 @@ query GetUser {
     }
   }
 `;
+
+export const USER_LOGIN = gql`
+query Login($username: String!, $password: String!){
+    token: login(login: {username: $username, password: $password})
+}
+`;

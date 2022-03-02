@@ -37,3 +37,4 @@ function createApolloClient(jwt: string): ApolloClient<NormalizedCacheObject> {
 }
 
 export * from './queries';
+export * from './mutations';

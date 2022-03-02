@@ -19,13 +19,13 @@ function LoginFormComp() {
         {
             setValidated(false);
             const loginRes = await globalStore.authService.accountLogin(loginModel.Username, loginModel.Password);
-            if(loginRes.ErrorId == undefined) // success
+            if(loginRes == undefined) // success
             {
                 window.location.assign('/');
             }
             else
             {
-                runInAction(() => loginModel.ErrorText = loginRes.Comment);
+                runInAction(() => loginModel.ErrorText = loginRes);
             }
         }
         else

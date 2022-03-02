@@ -18,8 +18,8 @@ export const Home = observer(() => {
         :
         <>
             <NavBar/>
-            <h1>Welcome, {authService.account.Username}</h1>
-            <h3>email: {authService.account.Email}</h3>
+            <h1>Welcome, {authService.account.username}</h1>
+            <h3>email: {authService.account.email}</h3>
         </>
     );
 });
