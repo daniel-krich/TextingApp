@@ -17,3 +17,13 @@ lastName
 }
 }
 `;
+
+export const SEND_MESSAGE = gql`
+mutation SendMessage($chatId: String!, $chatType: ChatType!, $message: String!){
+    addMessageToChat(message: {chatId: $chatId, typeChat: $chatType, message: $message}) {
+      lastMessage {
+        message
+      }
+    }
+  }
+`;

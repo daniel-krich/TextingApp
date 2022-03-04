@@ -124,7 +124,7 @@ namespace TextAppApi
 
             app.UseHttpsRedirection();
 
-            app.Use(async (context, next) =>
+            /*app.Use(async (context, next) =>
             {
                 await next();
                 if (context.Response.StatusCode == 404)
@@ -132,7 +132,7 @@ namespace TextAppApi
                     context.Request.Path = "/";
                     await next();
                 }
-            });
+            });*/
 
             app.UseDefaultFiles();
             app.UseStaticFiles();

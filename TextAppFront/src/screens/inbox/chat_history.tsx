@@ -13,19 +13,20 @@ export const ChatHistory = observer(() => {
     const location = useLocation();
     const chatService = useGlobalStore().chatService;
     useEffect(() => {
-        runInAction(() => chatService.chatHistory = chatService.chatHistory.sort((a,b) => new Date(b.LastMessage.Time).getTime() - new Date(a.LastMessage.Time).getTime()));
-    },[chatService.chatHistory]);
+        runInAction(() => chatService.chatHistory.items = chatService.chatHistory.items.sort((a,b) => new Date(b.lastMessage.time).getTime() - new Date(a.lastMessage.time).getTime()));
+        console.log(chatService.chatHistory.items);
+    },[chatService.chatHistory.items]);
     return (
         <>
             <Row className='p-3'>
                 <h5 className='text-center display-4 text-black'>Your chats</h5>
             </Row>
             <ListGroup className='chat-history' as="ol">
-                {chatService.chatHistory.filter(o => o.LastMessage != null).map((chat, index) =>
-                    <ListGroup.Item role="button" key={index} onClick={() => navigate('/inbox/' + chat.ChatId)} as="li" className="d-flex justify-content-between align-items-start">
+                {chatService.chatHistory.items.filter(o => o.lastMessage != null).map((chat, index) =>
+                    <ListGroup.Item role="button" key={index} onClick={() => navigate('/inbox/' + chat.chatId)} as="li" className="d-flex justify-content-between align-items-start">
                     <div className="ms-2 me-auto">
-                    <div className="fw-bold">{chat.Type == ChatType.Regular ? chat.ChatId : chat.Name}</div>
-                    {chat.LastMessage.Sender.FirstName} {chat.LastMessage.Sender.LastName}: {chat.LastMessage.Message}
+                    <div className="fw-bold">{chat.type == ChatType.Regular ? chat.chatId : chat.name}</div>
+                    {chat.lastMessage.sender.firstName} {chat.lastMessage.sender.lastName}: {chat.lastMessage.message}
                     </div>
                     <Badge bg="primary" pill></Badge>
                     </ListGroup.Item>

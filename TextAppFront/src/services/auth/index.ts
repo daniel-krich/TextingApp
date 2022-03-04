@@ -1,7 +1,7 @@
 import { ApolloClient, ApolloError, NormalizedCacheObject } from '@apollo/client';
 import { makeAutoObservable, runInAction } from 'mobx';
 import React from 'react';
-import { Ajax, TokenStore, Consts, NotifyService, USER_INFO, Apollo } from '../'
+import { Ajax, TokenStore, Consts, NotifyService, GET_USER_INFO, Apollo } from '../'
 import { REGISTER, USER_LOGIN } from '../apolloClient';
 
 interface ResponseModel {
@@ -86,7 +86,7 @@ export class Auth {
         {
             try {
                 this.apollo.setJWT(TokenStore.token);
-                const res = (await this.apollo.instance.query({query: USER_INFO})).data["user"] as LoginTokenResponse;
+                const res = (await this.apollo.instance.query({query: GET_USER_INFO})).data["user"] as LoginTokenResponse;
                 console.log(res);
                 //var res = await (await Ajax.Get(Consts.URL + '/api/user/refresh', true).response).json() as LoginTokenResponse;
                 runInAction(() => this.account = res);

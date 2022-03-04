@@ -45,14 +45,14 @@ namespace TextAppApi.Queries
             var User = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), sessionId);
             if (User is UserEntity)
             {
-                UserEntity user = await _dbContext.GetUserCollection().TryGetUserEntityByUsername(chatId);
+                UserEntity userchat = await _dbContext.GetUserCollection().TryGetUserEntityByUsername(chatId);
                 IQueryable<ChatEntity> query = (await GetUserChats()).Where(o => chatType == o.Type);
                 switch (chatType)
                 {
                     case ChatType.Regular:
-                        if (user is UserEntity)
+                        if (userchat is UserEntity)
                         {
-                            return query.Where(o => user.Id != ObjectId.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber)) && o.Participants.Contains(DbRefFactory.UserRef(user.Id)));
+                            return query.Where(o => userchat.Id != User.Id && o.Participants.Contains(DbRefFactory.UserRef(userchat.Id)));
                         }
                         else return Enumerable.Empty<ChatEntity>().AsQueryable();
 

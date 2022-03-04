@@ -29,7 +29,7 @@ namespace TextAppData.Helpers
             return await (await collection.FindAsync(query)).FirstOrDefaultAsync();
         }
 
-        public static async Task<IEnumerable<TDocument>> FetchDBRefAsAsync<TDocument>(this IMongoCollection<TDocument> collection, IList<MongoDBRef> dbRefs)
+        public static async Task<IEnumerable<TDocument>> FetchDBRefAsAsync<TDocument>(this IMongoCollection<TDocument> collection, IEnumerable<MongoDBRef> dbRefs)
         {
             if (dbRefs.Any())
             {

@@ -27,7 +27,7 @@ namespace TextAppApi.QueryTypes
             descriptor.Field<ChatResolver>(o => o.GetLastMessage(default, default));
 
             descriptor.Field(_ => _.Participants).Type<ListType<UserType>>().ResolveWith<ChatResolver>(o => o.GetParticipants(default, default));
-            descriptor.Field(_ => _.Messages).Type<ListType<MessageType>>().ResolveWith<ChatResolver>(o => o.GetMessages(default, default));
+            descriptor.Field(_ => _.Messages).Type<ListType<MessageType>>().ResolveWith<ChatResolver>(o => o.GetMessages(default, default, default));
         }
     }
 }

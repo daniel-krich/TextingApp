@@ -9,7 +9,7 @@ export class GlobalStore {
     apolloService: Apollo = new Apollo();
     notifyService: Notifications = new Notifications();
     authService: Auth = new Auth(this.notifyService, this.apolloService);
-    chatService: Chat = new Chat(this.notifyService);
+    chatService: Chat = new Chat(this.notifyService, this.apolloService);
     isAppLoaded: boolean = false;
     constructor(){
         makeAutoObservable(this);

@@ -27,9 +27,9 @@ namespace TextAppApi.QueryResolvers
         }
 
         [UseOffsetPaging(DefaultPageSize = 15)]
-        public async Task<IQueryable<MessageEntity>> GetMessages([Parent] ChatEntity chat, [Service] IDbContext dbContext)
+        public async Task<IQueryable<MessageEntity>> GetMessages([Parent] ChatEntity chat, [Service] IDbContext dbContext, IResolverContext resolverContext)
         {
-            return (await dbContext.GetMessageCollection().FetchDBRefAsAsync(chat.Messages)).AsQueryable();
+            return (await dbContext.GetMessageCollection().FetchDBRefAsAsync(chat.Messages)).Reverse().AsQueryable();
         }
 
         public async Task<UserEntity> GetSender([Parent] MessageEntity message, [Service] IDbContext dbContext)
@@ -42,7 +42,9 @@ namespace TextAppApi.QueryResolvers
             switch(chat.Type)
             {
                 case ChatType.Regular:
-                    return (await dbContext.GetUserCollection().FetchDBRefAsAsync(chat.Participants.Where(o => o.Id != ObjectId.Parse(httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber))).FirstOrDefault())).Username;
+                    var sessionId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Sid);
+                    UserEntity user = await dbContext.GetSessionCollection().TryGetUserEntityBySessionId(dbContext.GetUserCollection(), sessionId);
+                    return (await dbContext.GetUserCollection().FetchDBRefAsAsync(chat.Participants.Where(o => o.Id != user.Id).FirstOrDefault())).Username;
                 case ChatType.Group:
                     return chat.ChatId;
                 default:

@@ -24,13 +24,20 @@ namespace TextAppApi.Subscriptions
         [SubscribeAndResolve]
         public async ValueTask<ISourceStream<ChatEntity>> ListenChatUpdates()
         {
-            var sessionId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Sid);
-            var User = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), sessionId);
-            if (User is UserEntity)
+            try
             {
-                return await _topicEventReceiver.SubscribeAsync<string, ChatEntity>($"{nameof(ListenChatUpdates)}_{User.Id}");
+                var sessionId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Sid);
+                var User = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), sessionId);
+                if (User is UserEntity)
+                {
+                    return await _topicEventReceiver.SubscribeAsync<string, ChatEntity>($"{nameof(ListenChatUpdates)}_{User.Id}");
+                }
+                else
+                {
+                    return default;
+                }
             }
-            else
+            catch
             {
                 return default;
             }

@@ -20,10 +20,10 @@ export const Chat = observer(() => {
     const onScrollEvent = async function(evt: BaseSyntheticEvent) {
         if(evt.target.scrollHeight + evt.target.scrollTop == evt.target.clientHeight && !dontRenderChunks) {
             
-            const chunkLength = await chatService.loadChatChunk(chatService.currentChat);
+            const isNextChunk = await chatService.loadChatChunk(chatService.currentChat);
             console.log("loaded next chunk");
-            console.log(chatService.currentChat?.Messages?.map(o => o.Message));
-            if(chunkLength <= 0)
+            console.log(chatService.currentChat?.messages?.items?.map(o => o.message));
+            if(!isNextChunk)
                 setDontRenderChunks(true);
         }
     };
@@ -32,28 +32,28 @@ export const Chat = observer(() => {
         evt.preventDefault();
         if(ChatModel.chatText.length <= 0) return;
         if(chatService.currentChat != undefined)
-            await chatService.sendMessage(chatService.currentChat?.ChatId, chatService.currentChat?.Type, ChatModel.chatText);
+            await chatService.sendMessage(chatService.currentChat?.chatId, chatService.currentChat?.type, ChatModel.chatText);
         else
-            await chatService.sendMessage(chatId, ChatType.Regular, ChatModel.chatText);
+            await chatService.sendMessage(chatId ?? "", ChatType.Regular, ChatModel.chatText);
         runInAction(() => ChatModel.chatText = '');
     };
     useEffect(() => { (async () => {
         runInAction(() => {
-            if((chatService.currentChat = chats.find(o => o.ChatId == chatId)) == undefined)
+            if((chatService.currentChat = chats.items.find(o => o.chatId == chatId)) == undefined)
             {
                 chatService.loadChat(chatId).then(o => runInAction(() => {
                     chatService.currentChat = o;
-                    chatService.chatPartner = chatService.currentChat?.Participants.find(e => e.Username == chatService.currentChat?.ChatId)
+                    chatService.chatPartner = chatService.currentChat?.participants.items.find(e => e.username == chatService.currentChat?.chatId)
                 }));
             }
             else
             {
-                chatService.chatPartner = chatService.currentChat?.Participants.find(o => o.Username == chatService.currentChat?.ChatId)
+                chatService.chatPartner = chatService.currentChat?.participants.items.find(o => o.username == chatService.currentChat?.chatId)
             }
         });
-        if(chatService.currentChat?.Messages == undefined && chatService.currentChat != undefined)
+        if(/*chatService.currentChat?.messages == undefined &&*/ chatService.currentChat != undefined)
         {
-            chatService.loadChatChunk(chatService.currentChat);
+            chatService.loadChatChunk(chatService.currentChat).then(isMoreChunks => setDontRenderChunks(!isMoreChunks));
             console.log("loaded chunk");
         }})();
     }, []);
@@ -63,16 +63,16 @@ export const Chat = observer(() => {
             <Container>
                 <Row className='p-3 bg-white'>
                     <Col md={2}><h6 role="button" onClick={() => navigate('/inbox')} className='text-center display-4 text-black'>Back</h6></Col>
-                    <Col md={8}><h6 className='text-center display-4 text-black'>{chatService.currentChat?.Type == ChatType.Regular ? chatService.chatPartner?.FirstName + ' ' + chatService.chatPartner?.LastName : chatService.currentChat?.Name}</h6></Col>
+                    <Col md={8}><h6 className='text-center display-4 text-black'>{chatService.currentChat?.type == ChatType.Regular ? chatService.chatPartner?.firstName + ' ' + chatService.chatPartner?.lastName : chatService.currentChat?.name}</h6></Col>
                 </Row>
 
                 <Row className='chat-box' onScroll={onScrollEvent}>
                 <ListGroup as="ol" className='p-0'>
-                    {chatService.currentChat?.Messages?.map((o, index) => 
+                    {chatService.currentChat?.messages?.items?.map((o, index) => 
                         <ListGroup.Item key={index} as="div" className='border-0'>
-                        <div className={`ms-2 me-auto ${o.Sender.Username == user.username ? 'text-start' : 'text-end'}`}>
-                        <div className="fw-bold">{o.Sender.FirstName} {o.Sender.LastName} ({new Date(o.Time).toLocaleDateString()})</div>
-                        {o.Message}
+                        <div className={`ms-2 me-auto ${o.sender.username == user.username ? 'text-start' : 'text-end'}`}>
+                        <div className="fw-bold">{o.sender.firstName} {o.sender.lastName} ({new Date(o.time).toLocaleDateString()})</div>
+                        {o.message}
                         </div>
                         </ListGroup.Item>
                     )}

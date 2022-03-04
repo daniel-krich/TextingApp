@@ -5,6 +5,7 @@ using HotChocolate.Execution;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading;
@@ -19,8 +20,8 @@ namespace TextAppApi.Subscriptions
         {
             try
             {
-                var jwtHeader = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3NlcmlhbG51bWJlciI6IjYyMGNmYTAyZGQyOWZkODA2NmI1NTJjOSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJkYW5pZWwiLCJleHAiOjE2NDYxNTczNTYsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDQzMTAiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjMwMDAifQ.i8fjR1_NMRvuKR8HX2XmopWU0NCySEeuPuBmV6_k61k";
-                //var jwtHeader = message.Payload["Authorization"] as string;
+                //var jwtHeader = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9zaWQiOiI2MjIyOTU2YjBhNGU3ZWMxMDhmMWE2YzIiLCJleHAiOjE2NDcwMzg0NDMsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDQzMTAiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjMwMDAifQ.WK7zoy8kJlVkgsYM85vOFhJGtecppemkzbWZ4PbZd_w";
+                var jwtHeader = message.Payload["Authorization"] as string;
 
                 if (string.IsNullOrEmpty(jwtHeader) || !jwtHeader.StartsWith("Bearer "))
                     return new ValueTask<ConnectionStatus>(ConnectionStatus.Reject("Unauthorized"));
