@@ -1,5 +1,5 @@
 import React, { BaseSyntheticEvent, FormEvent, UIEventHandler, useEffect, useState } from 'react';
-import { Container, Row, Col, ListGroup, Form, FormControl, Button } from 'react-bootstrap';
+import { Container, Row, Col, ListGroup, Form, FormControl, Button, Alert, Spinner } from 'react-bootstrap';
 import { observer } from 'mobx-react';
 import { runInAction } from 'mobx';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -12,6 +12,7 @@ import { ChatModel } from './chatModel';
 export const Chat = observer(() => {
     const { chatId } = useParams();
     const navigate = useNavigate();
+    const [loadingChats, setLoadingChats] = useState(false);
     const [dontRenderChunks, setDontRenderChunks] = useState(false);
     const chatService = useGlobalStore().chatService;
     const chats = useGlobalStore().chatService.chatHistory;
@@ -30,12 +31,13 @@ export const Chat = observer(() => {
 
     const onSubmitMessage = async function(evt: FormEvent) {
         evt.preventDefault();
-        if(ChatModel.chatText.length <= 0) return;
-        if(chatService.currentChat != undefined)
-            await chatService.sendMessage(chatService.currentChat?.chatId, chatService.currentChat?.type, ChatModel.chatText);
-        else
-            await chatService.sendMessage(chatId ?? "", ChatType.Regular, ChatModel.chatText);
+        const chatText = ChatModel.chatText;
         runInAction(() => ChatModel.chatText = '');
+        if(chatText.length <= 0) return;
+        if(chatService.currentChat != undefined)
+            await chatService.sendMessage(chatService.currentChat?.chatId, chatService.currentChat?.type, chatText);
+        else
+            await chatService.sendMessage(chatId ?? "", ChatType.Regular, chatText);
     };
     useEffect(() => { (async () => {
         runInAction(() => {
@@ -51,9 +53,14 @@ export const Chat = observer(() => {
                 chatService.chatPartner = chatService.currentChat?.participants.items.find(o => o.username == chatService.currentChat?.chatId)
             }
         });
-        if(/*chatService.currentChat?.messages == undefined &&*/ chatService.currentChat != undefined)
+        if(chatService.currentChat != undefined)
         {
-            chatService.loadChatChunk(chatService.currentChat).then(isMoreChunks => setDontRenderChunks(!isMoreChunks));
+            setLoadingChats(true);
+            chatService.loadChatChunk(chatService.currentChat).then(isMoreChunks =>
+            {
+                setLoadingChats(false);
+                setDontRenderChunks(!isMoreChunks);
+            });
             console.log("loaded chunk");
         }})();
     }, []);
@@ -67,16 +74,32 @@ export const Chat = observer(() => {
                 </Row>
 
                 <Row className='chat-box' onScroll={onScrollEvent}>
-                <ListGroup as="ol" className='p-0'>
-                    {chatService.currentChat?.messages?.items?.map((o, index) => 
-                        <ListGroup.Item key={index} as="div" className='border-0'>
-                        <div className={`ms-2 me-auto ${o.sender.username == user.username ? 'text-start' : 'text-end'}`}>
-                        <div className="fw-bold">{o.sender.firstName} {o.sender.lastName} ({new Date(o.time).toLocaleDateString()})</div>
-                        {o.message}
-                        </div>
-                        </ListGroup.Item>
-                    )}
-                </ListGroup>
+                {
+                loadingChats ?
+                    (<ListGroup as="ol" className='p-0 h-50 align-items-center'>
+                        <Spinner animation="grow" variant="dark">
+                            <span className="visually-hidden">Loading...</span>
+                        </Spinner>
+                    </ListGroup>)
+                    :
+                    (<ListGroup as="ol" className='p-0'>
+                        {chatService.currentChat?.messages?.items?.map((o, index) => 
+                            <ListGroup.Item key={index} as="div" className='border-0'>
+                            <div className={`ms-2 me-auto ${o.sender.username == user.username ? 'text-start' : 'text-end'}`}>
+                            <div className="fw-bold">{o.sender.firstName} {o.sender.lastName} ({new Date(o.time).toLocaleDateString()})</div>
+                            {o.message}
+                            </div>
+                            </ListGroup.Item>)
+                        ??
+                            <Alert className='mb-0 rounded-0' variant="secondary">
+                            <Alert.Heading>No messages found</Alert.Heading>
+                            <p>
+                                You can start a conversation by sending a message.
+                            </p>
+                            </Alert>
+                        }
+                    </ListGroup>)
+                }
                 </Row>
 
                 <Row className='chat-box-input d-flex mt-3'>
