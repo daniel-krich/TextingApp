@@ -60,6 +60,7 @@ namespace TextAppApi.Queries
         }
 
         [Authorize]
+        [UseOffsetPaging(DefaultPageSize = 50)]
         public async Task<IQueryable<UserEntity>> SearchUser([Required] string name, [Required] bool exact)
         {
             var sessionId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Sid);

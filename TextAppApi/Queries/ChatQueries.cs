@@ -20,7 +20,8 @@ namespace TextAppApi.Queries
     public partial class DbQueries
     {
         [Authorize]
-        [UseOffsetPaging(DefaultPageSize = 15)]
+        //[UseOffsetPaging(DefaultPageSize = 15)]
+        [UseOffsetPaging(DefaultPageSize = int.MaxValue/2, MaxPageSize = int.MaxValue)] // temporary give the user all the chats
         public async Task<IQueryable<ChatEntity>> GetUserChats()
         {
             var sessionId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Sid);

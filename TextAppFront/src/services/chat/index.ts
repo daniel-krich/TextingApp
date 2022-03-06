@@ -1,7 +1,7 @@
 import { FetchPolicy } from "@apollo/client";
 import { makeAutoObservable, runInAction } from "mobx";
 import { Ajax, TokenStore, EventStream, Consts, NotifyService, Apollo } from '../';
-import { GET_CHATS, GET_CHAT_BY_ID, GET_CHAT_MESSAGES_BY_OFFSET, SEND_MESSAGE, SUBSCRIBE_LISTEN_MESSAGES } from "../apolloClient";
+import { GET_CHATS, GET_CHAT_BY_ID, GET_CHAT_MESSAGES_BY_OFFSET, SEARCH_USER_BY_NAME, SEND_MESSAGE, SUBSCRIBE_LISTEN_MESSAGES } from "../apolloClient";
 
 export enum ChatType {
     Regular = "REGULAR",
@@ -13,6 +13,12 @@ export interface ChatStruct {
     type: ChatType,
     messages: {
         items: MessageStruct[]
+    }
+}
+
+export interface SearchUserInfo {
+    searchUser: {
+        items: UserChatStruct[]
     }
 }
 
@@ -64,60 +70,31 @@ export class Chat {
     chatHistory: {
         items: ChatHistoryStruct[]
     } = {items: {} as ChatHistoryStruct[]};
-    currentChat: ChatHistoryStruct | undefined;
-    chatPartner: UserChatStruct | undefined;
+    handleMessagesEvent: {method:{ (message: ResponseListenMessages): void;}}[] = [] as {method:{ (message: ResponseListenMessages): void; }}[];
     apollo: Apollo;
-    constructor(notify: NotifyService,
-                apollo: Apollo){
+    constructor(notify: NotifyService, apollo: Apollo) {
         this.apollo = apollo;
-        //notify.addNotification("init", "chat initiated", "cool stuff, we passed the notification service to other service");
         makeAutoObservable(this);
     }
 
     async loadChats() {
         const res = (await this.apollo.instance.query({query: GET_CHATS, variables: {offset: this.chatHistory.items.length ?? 0}})).data["userChats"] as {items: ChatHistoryStruct[]};
-        //const res = await (await Ajax.Get(Consts.URL + '/api/chat', true).response).json() as ChatHistoryStruct[];
         runInAction(() => this.chatHistory = res);
-        //
-        //var handleMessages = new EventSource('https://localhost:44310/api/Message/pull/' + TokenStore.token);
-        //handleMessages.onmessage = (e) => this.handleMessages(e);
-
-        /*var source = new EventStream(Consts.URL + '/api/Message/pull', {
-            payload: '',
-            headers: {
-                'authorization': 'Bearer ' + TokenStore.token
-            },
-            method: 'GET',
-            withCredentials: ''
-        });
-        source.addEventListener('message', (e: any) => this.handleMessages(e));
-        source.stream();*/
-
         this.apollo.instance.subscribe({query: SUBSCRIBE_LISTEN_MESSAGES}).subscribe((o) => this.handleIncommingMessages(o as ResponseListenMessages));
     }
 
-    async loadChat(chatId: string | undefined): Promise<ChatHistoryStruct> {
-        const res = await (await Ajax.Post(Consts.URL + '/api/chat/contact',
-        {
-            ChatId: chatId
-        }, true).response).json() as ChatHistoryStruct;
-        if(this.chatHistory.items.findIndex(o => o.chatId == res.chatId) == -1 && res.chatId != undefined)
-        {
-            
-            console.log("added chat to history");
-            return this.chatHistory.items[this.chatHistory.items.push(res)-1];
+    async loadUserChatInfo(username: string): Promise<SearchUserInfo> {
+        const res = (await this.apollo.instance.query({query: SEARCH_USER_BY_NAME, variables: {username: username, exact: true}})).data as SearchUserInfo;
+        if(res.searchUser.items.length == 0) {
+            throw 'Invalid username';
         }
-        throw 'Invalid chat';
+        else {
+            return res;
+        }
     }
 
     async loadChatChunk(currentChat: ChatHistoryStruct | undefined): Promise<Boolean> {
-        /*const res = await (await Ajax.Post(Consts.URL + '/api/Chat/messages', {
-            chatId: currentChat?.chatId,
-            typeChat: currentChat?.type,
-            messageOffset: currentChat?.messages?.items?.length || 0
-        }, true).response).json() as ChatStruct;*/
         const res = (await this.apollo.instance.query({query: GET_CHAT_MESSAGES_BY_OFFSET, variables: {chatId: currentChat?.chatId, chatType: currentChat?.type, messageOffset: currentChat?.messages?.items?.length ?? 0}})).data["userChatByChatId"] as {items: ChatHistoryStruct[]};
-        //console.log(res.items[0].messages.items[0].message);
         if(res?.items[0] != undefined) {
             const chat = this.chatHistory.items.find(c => c.chatId == currentChat?.chatId) as ChatHistoryStruct;
             console.log(chat);
@@ -142,34 +119,9 @@ export class Chat {
     }
 
     async sendMessage(chatId: string, typeChat: ChatType, message: string) {
-        console.log("chat type " + typeChat);
-        /*await (await Ajax.Post(Consts.URL + '/api/Message/push', {
-            chatId: chatId,
-            typeChat: typeChat,
-            message: message
-        }, true).response).json() as ChatHistoryStruct[];*/
         const res = (await this.apollo.instance.mutate({mutation: SEND_MESSAGE, variables: {chatId: chatId, chatType: typeChat, message: message}})).data["addMessageToChat"] as {lastMessage: {message: string}};
         console.log(res.lastMessage.message);
     }
-
-    /*handleMessages(e: MessageEvent) {
-        const ChatData = JSON.parse(e.data) as ChatHistoryStruct;
-        const ChatIndex = this.chatHistory.items.findIndex(o => o.chatId == ChatData.chatId);
-        if(ChatIndex >= 0)
-        {
-            if(this.chatHistory.items[ChatIndex].messages == undefined)
-                runInAction(() => this.chatHistory.items[ChatIndex].messages = {} as {items: MessageStruct[], pageInfo: {hasNextPage: Boolean}});
-
-            runInAction(() => this.chatHistory.items[ChatIndex].messages.items.push(ChatData.lastMessage));
-            this.chatHistory.items[ChatIndex].lastMessage = ChatData.lastMessage;
-            console.log(this.chatHistory.items[ChatIndex]);
-        }
-        else
-        {
-            runInAction(() => this.chatHistory.items.push(ChatData));
-        }
-        runInAction(() => this.chatHistory.items = this.chatHistory.items.sort((a,b) => new Date(b.lastMessage.time).getTime() - new Date(a.lastMessage.time).getTime()));
-    }*/
 
     async handleIncommingMessages(e: ResponseListenMessages) {
         const ChatIndex = this.chatHistory.items.findIndex(o => o.chatId == e.data.listenChatUpdates.chatId && o.type == e.data.listenChatUpdates.type);
@@ -191,5 +143,9 @@ export class Chat {
             runInAction(() => this.chatHistory.items.push(res.items[0]));
         }
         runInAction(() => this.chatHistory.items = this.chatHistory.items.sort((a,b) => new Date(b.lastMessage.time).getTime() - new Date(a.lastMessage.time).getTime()));
+
+        this.handleMessagesEvent.forEach(o => 
+            o?.method.call(this, e)
+        );
     }
 }

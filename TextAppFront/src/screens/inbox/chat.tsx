@@ -6,8 +6,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './chat.css';
 import { useGlobalStore } from '../../services';
-import { ChatHistoryStruct, ChatType } from '../../services/chat';
+import { ChatHistoryStruct, ChatType, ResponseListenMessages } from '../../services/chat';
 import { ChatModel } from './chatModel';
+import { ApolloError } from '@apollo/client';
 
 export const Chat = observer(() => {
     const { chatId } = useParams();
@@ -21,9 +22,9 @@ export const Chat = observer(() => {
     const onScrollEvent = async function(evt: BaseSyntheticEvent) {
         if(evt.target.scrollHeight + evt.target.scrollTop == evt.target.clientHeight && !dontRenderChunks) {
             
-            const isNextChunk = await chatService.loadChatChunk(chatService.currentChat);
+            const isNextChunk = await chatService.loadChatChunk(ChatModel.currentChat);
             console.log("loaded next chunk");
-            console.log(chatService.currentChat?.messages?.items?.map(o => o.message));
+            console.log(ChatModel.currentChat?.messages?.items?.map(o => o.message));
             if(!isNextChunk)
                 setDontRenderChunks(true);
         }
@@ -34,35 +35,69 @@ export const Chat = observer(() => {
         const chatText = ChatModel.chatText;
         runInAction(() => ChatModel.chatText = '');
         if(chatText.length <= 0) return;
-        if(chatService.currentChat != undefined)
-            await chatService.sendMessage(chatService.currentChat?.chatId, chatService.currentChat?.type, chatText);
-        else
-            await chatService.sendMessage(chatId ?? "", ChatType.Regular, chatText);
+        try {
+            if(ChatModel.currentChat != undefined)
+                await chatService.sendMessage(ChatModel.currentChat?.chatId, ChatModel.currentChat?.type, chatText);
+            else
+                await chatService.sendMessage(chatId ?? "", ChatType.Regular, chatText);
+        }
+        catch(e: any){
+            if(e instanceof ApolloError)
+                console.log(e.message);
+        }
     };
-    useEffect(() => { (async () => {
+
+    useEffect(() => {
         runInAction(() => {
-            if((chatService.currentChat = chats.items.find(o => o.chatId == chatId)) == undefined)
+            if((ChatModel.currentChat = chats.items.find(o => o.chatId == chatId)) == undefined)
             {
-                chatService.loadChat(chatId).then(o => runInAction(() => {
-                    chatService.currentChat = o;
-                    chatService.chatPartner = chatService.currentChat?.participants.items.find(e => e.username == chatService.currentChat?.chatId)
-                }));
+                chatService.loadUserChatInfo(chatId ?? "").then(o => runInAction(() => {
+                    ChatModel.chatPartner = o.searchUser.items[0];
+                    ChatModel.currentChatType = ChatType.Regular;
+                }))
+                .catch((e: any) => {
+                    
+                });
             }
             else
             {
-                chatService.chatPartner = chatService.currentChat?.participants.items.find(o => o.username == chatService.currentChat?.chatId)
+                ChatModel.chatPartner = ChatModel.currentChat?.participants.items.find(o => o.username == ChatModel.currentChat?.chatId);
+                ChatModel.currentChatType = ChatModel.currentChat.type;
             }
         });
-        if(chatService.currentChat != undefined)
+    }, []);
+
+    useEffect(() => {
+        if(ChatModel.currentChat != undefined)
         {
             setLoadingChats(true);
-            chatService.loadChatChunk(chatService.currentChat).then(isMoreChunks =>
+            chatService.loadChatChunk(ChatModel.currentChat).then(isMoreChunks =>
             {
                 setLoadingChats(false);
                 setDontRenderChunks(!isMoreChunks);
             });
             console.log("loaded chunk");
-        }})();
+        }
+    }, []);
+
+    useEffect(() => {
+        const update_current_chat = {
+            method: (e: ResponseListenMessages) => {
+                if(e.data.listenChatUpdates.chatId == chatId) {
+                    ChatModel.currentChat = chats.items.find(o => o.chatId == e.data.listenChatUpdates.chatId);
+                    ChatModel.currentChatType = e.data.listenChatUpdates.type;
+                }
+            }
+        };
+        let funcIndex = chatService.handleMessagesEvent.findIndex(o => o == chatService.handleMessagesEvent.at(-1))+1;
+        chatService.handleMessagesEvent[funcIndex] = update_current_chat;
+        console.log("length " + chatService.handleMessagesEvent.length);
+        return () => {
+            
+            delete chatService.handleMessagesEvent[funcIndex];
+            console.log("length after destruct " + chatService.handleMessagesEvent.length);
+            console.log(chatService.handleMessagesEvent);
+        };
     }, []);
     return (
         <>
@@ -70,7 +105,13 @@ export const Chat = observer(() => {
             <Container>
                 <Row className='p-3 bg-white'>
                     <Col md={2}><h6 role="button" onClick={() => navigate('/inbox')} className='text-center display-4 text-black'>Back</h6></Col>
-                    <Col md={8}><h6 className='text-center display-4 text-black'>{chatService.currentChat?.type == ChatType.Regular ? chatService.chatPartner?.firstName + ' ' + chatService.chatPartner?.lastName : chatService.currentChat?.name}</h6></Col>
+                    <Col md={8}><h6 className='text-center display-4 text-black'>
+                    {
+                        (ChatModel.currentChatType == ChatType.Regular ? ChatModel.chatPartner?.firstName + ' ' + ChatModel.chatPartner?.lastName : ChatModel.currentChat?.name)
+                        ??
+                        (<p className='text-muted'>Unknown</p>)
+                    }
+                    </h6></Col>
                 </Row>
 
                 <Row className='chat-box' onScroll={onScrollEvent}>
@@ -83,7 +124,7 @@ export const Chat = observer(() => {
                     </ListGroup>)
                     :
                     (<ListGroup as="ol" className='p-0'>
-                        {chatService.currentChat?.messages?.items?.map((o, index) => 
+                        {ChatModel.currentChat?.messages?.items?.map((o, index) => 
                             <ListGroup.Item key={index} as="div" className='border-0'>
                             <div className={`ms-2 me-auto ${o.sender.username == user.username ? 'text-start' : 'text-end'}`}>
                             <div className="fw-bold">{o.sender.firstName} {o.sender.lastName} ({new Date(o.time).toLocaleDateString()})</div>

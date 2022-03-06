@@ -107,3 +107,15 @@ query GetChatById($chatId: String!, $chatType: ChatType!){
     }
   }
 `;
+
+export const SEARCH_USER_BY_NAME = gql`
+query SearchUserByName($username: String!, $exact: Boolean!) {
+    searchUser(name: $username, exact: $exact) {
+      items {
+        username
+        firstName
+        lastName
+      }
+    }
+  }
+`;
