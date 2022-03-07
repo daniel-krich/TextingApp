@@ -25,6 +25,7 @@ using TextAppApi.Mutations;
 using HotChocolate.Execution.Configuration;
 using TextAppApi.ErrorFilter;
 using TextAppApi.Subscriptions;
+using TextAppApi.Middlewares;
 
 namespace TextAppApi
 {
@@ -124,27 +125,16 @@ namespace TextAppApi
 
             app.UseHttpsRedirection();
 
-            /*app.Use(async (context, next) =>
-            {
-                await next();
-                if (context.Response.StatusCode == 404)
-                {
-                    context.Request.Path = "/";
-                    await next();
-                }
-            });*/
+            app.UseMiddleware<RedirectMiddleware>();
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
-
+            
             app.UseWebSockets();
             app.UseRouting();
-
+            
             app.UseAuthentication();
             app.UseAuthorization();
-
-
-
 
             app.UseEndpoints(endpoints =>
             {
