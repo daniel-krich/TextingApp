@@ -21,6 +21,7 @@ namespace TextAppData.DataEntities
         public ObjectId Id { get; set; }
         public string Name { get; set; }
         public string ChatId { get; set; }
+        public DateTime LastActivity { get; set; }
         public ChatType Type { get; set; }
         public IList<MongoDBRef> Participants { get; set; }
         public IList<MongoDBRef> Messages { get; set; }

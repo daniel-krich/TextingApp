@@ -6,26 +6,34 @@ import { useParams, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './chat.css';
 import { useGlobalStore } from '../../services';
-import { ChatHistoryStruct, ChatType, ResponseListenMessages } from '../../services/chat';
+import { ChatStruct, ChatType, MessageStruct, ResponseListenMessages, UserChatStruct } from '../../services/chat';
 import { ChatModel } from './chatModel';
 import { ApolloError } from '@apollo/client';
 
 export const Chat = observer(() => {
     const { chatId } = useParams();
     const navigate = useNavigate();
-    const [loadingChats, setLoadingChats] = useState(false);
+    const [loadingChats, setLoadingChats] = useState(true);
     const [dontRenderChunks, setDontRenderChunks] = useState(false);
     const chatService = useGlobalStore().chatService;
-    const chats = useGlobalStore().chatService.chatHistory;
     const user = useGlobalStore().authService.account;
     //
     const onScrollEvent = async function(evt: BaseSyntheticEvent) {
         if(evt.target.scrollHeight + evt.target.scrollTop == evt.target.clientHeight && !dontRenderChunks) {
             
-            const isNextChunk = await chatService.loadChatChunk(ChatModel.currentChat);
-            console.log("loaded next chunk");
-            console.log(ChatModel.currentChat?.messages?.items?.map(o => o.message));
-            if(!isNextChunk)
+            const chatChunk = (await chatService.loadChatChunk(chatId ?? "", ChatModel.currentChat?.messages?.items?.length ?? 0, ChatModel.currentChatType))[0] as ChatStruct;
+            runInAction(() => {
+                if(ChatModel.currentChat) {
+                    if(ChatModel.currentChat.messages.items == undefined) {
+                        ChatModel.currentChat.messages.items = [] as MessageStruct[];
+                    }
+                    ChatModel.currentChat.messages.items = ChatModel.currentChat.messages.items.concat(chatChunk.messages.items);
+    
+                    console.log(ChatModel.currentChat.messages.items);
+                }
+                //chat.messages.items = chat.messages?.items.sort((a,b) => new Date(a.time).getTime() - new Date(b.time).getTime())
+            });
+            if(!chatChunk.messages.pageInfo.hasNextPage)
                 setDontRenderChunks(true);
         }
     };
@@ -34,71 +42,84 @@ export const Chat = observer(() => {
         evt.preventDefault();
         const chatText = ChatModel.chatText;
         runInAction(() => ChatModel.chatText = '');
-        if(chatText.length <= 0) return;
-        try {
-            if(ChatModel.currentChat != undefined)
-                await chatService.sendMessage(ChatModel.currentChat?.chatId, ChatModel.currentChat?.type, chatText);
-            else
-                await chatService.sendMessage(chatId ?? "", ChatType.Regular, chatText);
-        }
-        catch(e: any){
-            if(e instanceof ApolloError)
-                console.log(e.message);
+        if(chatText.length > 0) {
+            try {
+                await chatService.sendMessage(chatId ?? "", ChatModel.currentChatType ?? ChatType.Regular, chatText);
+            }
+            catch(e: any){
+                if(e instanceof ApolloError)
+                    console.log(e.message);
+            }
         }
     };
 
     useEffect(() => {
-        runInAction(() => {
-            if((ChatModel.currentChat = chats.items.find(o => o.chatId == chatId)) == undefined)
-            {
-                chatService.loadUserChatInfo(chatId ?? "").then(o => runInAction(() => {
-                    ChatModel.chatPartner = o.searchUser.items[0];
-                    ChatModel.currentChatType = ChatType.Regular;
-                }))
-                .catch((e: any) => {
-                    
-                });
-            }
-            else
-            {
-                ChatModel.chatPartner = ChatModel.currentChat?.participants.items.find(o => o.username == ChatModel.currentChat?.chatId);
-                ChatModel.currentChatType = ChatModel.currentChat.type;
-            }
-        });
-    }, []);
-
-    useEffect(() => {
-        if(ChatModel.currentChat != undefined)
-        {
-            setLoadingChats(true);
-            chatService.loadChatChunk(ChatModel.currentChat).then(isMoreChunks =>
-            {
-                setLoadingChats(false);
-                setDontRenderChunks(!isMoreChunks);
-            });
-            console.log("loaded chunk");
-        }
-    }, []);
-
-    useEffect(() => {
-        const update_current_chat = {
-            method: (e: ResponseListenMessages) => {
-                if(e.data.listenChatUpdates.chatId == chatId) {
-                    ChatModel.currentChat = chats.items.find(o => o.chatId == e.data.listenChatUpdates.chatId);
-                    ChatModel.currentChatType = e.data.listenChatUpdates.type;
+        let isActive = true;
+        (async () => {
+            var chatChunk = (await chatService.loadChatChunk(chatId ?? "", 0))[0] as ChatStruct;
+            if(chatChunk) {
+                if(isActive) {
+                    setDontRenderChunks(!chatChunk.messages.pageInfo.hasNextPage);
+                    runInAction(() => {
+                        ChatModel.currentChat = chatChunk;
+                        ChatModel.chatPartner = chatChunk.participants.items.find(p => p.username == chatId) ?? {} as UserChatStruct;
+                        ChatModel.currentChatType = chatChunk.type;
+                    });
                 }
             }
-        };
-        let funcIndex = chatService.handleMessagesEvent.findIndex(o => o == chatService.handleMessagesEvent.at(-1))+1;
-        chatService.handleMessagesEvent[funcIndex] = update_current_chat;
-        console.log("length " + chatService.handleMessagesEvent.length);
+            else {
+                try {
+                    const search = await chatService.loadUserChatInfo(chatId ?? "");
+                    if(isActive) {
+                        runInAction(() => {
+                            ChatModel.chatPartner = search.searchUser.items[0];
+                            ChatModel.currentChatType = ChatType.Regular;
+                        });
+                    }
+                }
+                catch { }
+            }
+            //await new Promise(r => setTimeout(r, 500));
+            if(isActive) setLoadingChats(false);
+        })();
         return () => {
-            
-            delete chatService.handleMessagesEvent[funcIndex];
-            console.log("length after destruct " + chatService.handleMessagesEvent.length);
-            console.log(chatService.handleMessagesEvent);
+            isActive = false;
         };
     }, []);
+
+    useEffect(() => {
+        let isActive = true;
+        function ProcessChatUpdates(e: ResponseListenMessages) {
+            if(e.data.listenChatUpdates.chatId == chatId) {
+                runInAction(() => {
+                    if(ChatModel.currentChat) {
+                        if(ChatModel.currentChat.messages.items == undefined) {
+                            ChatModel.currentChat.messages.items = [] as MessageStruct[];
+                        }
+                        ChatModel.currentChat.messages.items.unshift(e.data.listenChatUpdates.lastMessage);
+                    }
+                });
+                
+                if(!ChatModel.currentChat) {
+                    chatService.loadChatChunk(chatId ?? "", 0, e.data.listenChatUpdates.type).then((resChunk: ChatStruct[]) => {
+                        runInAction(() => ChatModel.currentChat = resChunk[0]);
+                    });
+                }
+            }
+        }
+        let unsubscribe = chatService.handleMessagesEvent?.subscribe((e: any) => {
+            if(isActive) {
+                ProcessChatUpdates(e);
+            }
+            else {
+                unsubscribe?.unsubscribe();
+            }
+        });
+        return () => {
+            isActive = false;
+        };
+    }, []);
+
     return (
         <>
             
@@ -107,6 +128,11 @@ export const Chat = observer(() => {
                     <Col md={2}><h6 role="button" onClick={() => navigate('/inbox')} className='text-center display-4 text-black'>Back</h6></Col>
                     <Col md={8}><h6 className='text-center display-4 text-black'>
                     {
+                        loadingChats ?
+                        (<Spinner animation="grow" variant="dark">
+                                <span className="visually-hidden">Loading...</span>
+                        </Spinner>)
+                        :
                         (ChatModel.currentChatType == ChatType.Regular ? ChatModel.chatPartner?.firstName + ' ' + ChatModel.chatPartner?.lastName : ChatModel.currentChat?.name)
                         ??
                         (<p className='text-muted'>Unknown</p>)
@@ -123,7 +149,7 @@ export const Chat = observer(() => {
                         </Spinner>
                     </ListGroup>)
                     :
-                    (<ListGroup as="ol" className='p-0'>
+                    (<ListGroup as="ol" className='p-0 flex-column-reverse'>
                         {ChatModel.currentChat?.messages?.items?.map((o, index) => 
                             <ListGroup.Item key={index} as="div" className='border-0'>
                             <div className={`ms-2 me-auto ${o.sender.username == user.username ? 'text-start' : 'text-end'}`}>

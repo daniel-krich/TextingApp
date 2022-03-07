@@ -7,6 +7,7 @@ import './loginForm.css'
 import { useGlobalStore } from '../../services';
 import { loginModel } from './loginFormModel';
 import { useNavigate } from 'react-router-dom';
+import { ApolloError } from '@apollo/client';
 
 function LoginFormComp() {
     const [validated, setValidated] = useState(false);
@@ -18,14 +19,14 @@ function LoginFormComp() {
         if(evt.currentTarget.reportValidity())
         {
             setValidated(false);
-            const loginRes = await globalStore.authService.accountLogin(loginModel.Username, loginModel.Password);
-            if(loginRes == undefined) // success
-            {
+            try {
+                const loginRes = await globalStore.authService.accountLogin(loginModel.Username, loginModel.Password);
                 window.location.assign('/');
             }
-            else
-            {
-                runInAction(() => loginModel.ErrorText = loginRes);
+            catch(e: any) {
+                if(e instanceof ApolloError) {
+                    runInAction(() => loginModel.ErrorText = e.message);
+                }
             }
         }
         else

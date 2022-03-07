@@ -41,12 +41,43 @@ query GetChats($offset: Int!){
           message
         }
       }
+      pageInfo {
+        hasNextPage
+      }
     }
   }
 `;
 
-export const GET_CHAT_MESSAGES_BY_OFFSET = gql`
-query GetChatById($chatId: String!, $messageOffset: Int!, $chatType: ChatType!){
+export const GET_CHAT_BY_ID = gql`
+query GetChatById($chatId: String!, $chatType: ChatType){
+    userChatByChatId(chatId: $chatId, chatType: $chatType, take: 1) {
+      items {
+        chatId
+        type
+        name
+        participants {
+          items {
+            username
+            firstName
+            lastName
+          }
+        }
+        lastMessage {
+          sender{
+            username
+            firstName
+            lastName
+          }
+          time
+          message
+        }
+      }
+    }
+  }
+`;
+
+export const GET_CHAT_MESSAGES_CHUNK_BY_OFFSET = gql`
+query GetChatById($chatId: String!, $messageOffset: Int!, $chatType: ChatType){
     userChatByChatId(chatId: $chatId, chatType: $chatType, take: 1) {
       items {
         messages(skip: $messageOffset) {
@@ -69,8 +100,8 @@ query GetChatById($chatId: String!, $messageOffset: Int!, $chatType: ChatType!){
   }
 `;
 
-export const GET_CHAT_BY_ID = gql`
-query GetChatById($chatId: String!, $chatType: ChatType!){
+export const GET_FULLCHAT_BY_ID_WITH_MESSAGES_CHUNK = gql`
+query GetChatById($chatId: String!, $messageOffset: Int!, $chatType: ChatType){
     userChatByChatId(chatId: $chatId, chatType: $chatType, take: 1) {
       items {
         chatId
@@ -83,7 +114,7 @@ query GetChatById($chatId: String!, $chatType: ChatType!){
             lastName
           }
         }
-        messages(take: 1) {
+        messages(skip: $messageOffset) {
           items {
             sender {
               username
@@ -93,15 +124,9 @@ query GetChatById($chatId: String!, $chatType: ChatType!){
             time
             message
           }
-        }
-        lastMessage {
-          sender{
-            username
-            firstName
-            lastName
+          pageInfo {
+            hasNextPage
           }
-          time
-          message
         }
       }
     }

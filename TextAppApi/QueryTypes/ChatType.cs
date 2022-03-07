@@ -20,6 +20,7 @@ namespace TextAppApi.QueryTypes
             descriptor.Field(_ => _.ChatId).Type<StringType>().ResolveWith<ChatResolver>(o => o.GetChatId(default, default, default));
             descriptor.Field(_ => _.Name).Type<StringType>();
             descriptor.Field(_ => _.Type).Type<EnumType<TextAppData.Enums.ChatType>>();
+            descriptor.Field(_ => _.LastActivity).Type<DateTimeType>();
 
             descriptor.Field<ChatResolver>(o => o.GetParticipantsCount(default));
             descriptor.Field<ChatResolver>(o => o.GetMessagesCount(default));

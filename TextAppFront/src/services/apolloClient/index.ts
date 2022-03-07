@@ -6,6 +6,8 @@ import {
     gql,
     NormalizedCacheObject,
     HttpLink,
+    WatchQueryFetchPolicy,
+    DefaultOptions,
 } from "@apollo/client";
 
 import { split } from '@apollo/client/link/core';
@@ -77,10 +79,20 @@ const link = (jwt: string | undefined = undefined) => split(
     httpLink(jwt),
 );
 
+const defaultOptions: DefaultOptions = {
+    watchQuery: {
+        fetchPolicy: 'network-only'
+    },
+    query: {
+        fetchPolicy: 'network-only'
+    }
+}
+
 function createApolloClient(jwt: string | undefined = undefined): ApolloClient<NormalizedCacheObject> {
     return new ApolloClient({
         link: link(jwt),
-        cache: new InMemoryCache()
+        cache: new InMemoryCache(),
+        defaultOptions: defaultOptions
     });
 }
 

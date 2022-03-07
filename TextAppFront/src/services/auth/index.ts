@@ -31,7 +31,7 @@ export class Auth {
         makeAutoObservable(this);
     }
 
-    async accountLogin(username: string, password: string): Promise<string | undefined> {
+    async accountLogin(username: string, password: string): Promise<LoginResponse> {
         /*const json = await (await Ajax.Post(Consts.URL + '/api/user/login', {
             Username: username,
             Password: password
@@ -39,15 +39,15 @@ export class Auth {
         try {
             const res = (await this.apollo.instance.query({query: USER_LOGIN, variables: {username: username, password: password}})).data as LoginResponse;
             TokenStore.token = res.token;
-            return;
+            return res;
         }
         catch(err: any) {
             if(err instanceof ApolloError) {
                 console.log(err.message);
                 this.apollo.setJWT("");
                 TokenStore.clearTokens();
-                return err.message;
             }
+            throw err;
         }
     }
 

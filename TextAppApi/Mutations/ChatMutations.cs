@@ -47,7 +47,9 @@ namespace TextAppApi.Mutations
                                 };
                                 await _dbContext.GetMessageCollection().InsertOneAsync(currentMessage);
                                 await _dbContext.GetChatCollection().UpdateOneAsync(c => c.Id == chat.Id,
-                                    Builders<ChatEntity>.Update.AddToSet(o => o.Messages, DbRefFactory.MessageRef(currentMessage.Id)));
+                                    Builders<ChatEntity>.Update
+                                    .AddToSet(o => o.Messages, DbRefFactory.MessageRef(currentMessage.Id))
+                                    .Set(o => o.LastActivity, DateTime.Now));
                                 var currentChat = (await _dbContext.GetChatCollection().FindAsync(c => c.Id == chat.Id)).FirstOrDefault();
 
                                 // Send new chat event to the participants over ws
@@ -68,6 +70,7 @@ namespace TextAppApi.Mutations
                                 await _dbContext.GetMessageCollection().InsertOneAsync(currentMessage); // insert first, then we can use the ref with the id.
                                 ChatEntity currentChat = new ChatEntity
                                 {
+                                    LastActivity = DateTime.Now,
                                     Participants = new List<MongoDBRef>() { DbRefFactory.UserRef(User.Id), DbRefFactory.UserRef(founduser.Id) },
                                     Messages = new List<MongoDBRef>() { DbRefFactory.MessageRef(currentMessage.Id) }
                                 };
@@ -100,7 +103,9 @@ namespace TextAppApi.Mutations
                             };
                             await _dbContext.GetMessageCollection().InsertOneAsync(currentMessage);
                             await _dbContext.GetChatCollection().UpdateOneAsync(c => c.Id == chat.Id,
-                                Builders<ChatEntity>.Update.AddToSet(o => o.Messages, DbRefFactory.MessageRef(currentMessage.Id)));
+                                Builders<ChatEntity>.Update
+                                .AddToSet(o => o.Messages, DbRefFactory.MessageRef(currentMessage.Id))
+                                .Set(o => o.LastActivity, DateTime.Now));
                             var currentChat = (await _dbContext.GetChatCollection().FindAsync(c => c.Id == chat.Id)).FirstOrDefault();
 
                             // Send new chat event to the participants over ws

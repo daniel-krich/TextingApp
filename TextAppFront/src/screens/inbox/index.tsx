@@ -16,10 +16,7 @@ export function Inbox() {
             <Container>
                 <Row className='chat-row'>
                     <Col sm={12}>
-                        {
-                            chatId != undefined && chatId.length > 0 ?
-                            <Chat /> : <ChatHistory/>
-                        }
+                        {chatId ? <Chat/> : <ChatHistory/>}
                     </Col>
                 </Row>
             </Container>

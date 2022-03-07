@@ -20,9 +20,10 @@ export class GlobalStore {
         await this.authService.accountLoginToken();
         if(this.authService.isLogged)
         {
-            await this.chatService.loadChats();
+            // init stuff if user logged-in.
+
+            this.chatService.registerListenMessages();
         }
-        await new Promise(r => setTimeout(r, 1000));
     }
 }
 

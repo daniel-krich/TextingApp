@@ -1,10 +1,10 @@
 import { makeAutoObservable } from "mobx";
-import { ChatHistoryStruct, ChatType, UserChatStruct } from '../../services';
+import { ChatStruct, ChatType, UserChatStruct } from '../../services';
 
 class ChatInputModel {
-    chatPartner: UserChatStruct | undefined;
-    currentChat: ChatHistoryStruct | undefined;
-    currentChatType: ChatType | undefined;
+    chatPartner: UserChatStruct = {} as UserChatStruct;
+    currentChat: ChatStruct | undefined;
+    currentChatType: ChatType = {} as ChatType;
     chatText: string = "";
     constructor(){
         makeAutoObservable(this);

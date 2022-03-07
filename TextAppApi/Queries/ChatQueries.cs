@@ -20,8 +20,7 @@ namespace TextAppApi.Queries
     public partial class DbQueries
     {
         [Authorize]
-        //[UseOffsetPaging(DefaultPageSize = 15)]
-        [UseOffsetPaging(DefaultPageSize = int.MaxValue/2, MaxPageSize = int.MaxValue)] // temporary give the user all the chats
+        [UseOffsetPaging(DefaultPageSize = 15)]
         public async Task<IQueryable<ChatEntity>> GetUserChats()
         {
             var sessionId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Sid);
@@ -30,7 +29,7 @@ namespace TextAppApi.Queries
             {
                 return _dbContext.GetChatCollection()
                     .AsQueryable()
-                    .Where(o => o.Participants.Contains(DbRefFactory.UserRef(User.Id)));
+                    .Where(o => o.Participants.Contains(DbRefFactory.UserRef(User.Id))).OrderByDescending(o => o.LastActivity);
             }
             else
             {
@@ -40,34 +39,28 @@ namespace TextAppApi.Queries
 
         [Authorize]
         [UseOffsetPaging(DefaultPageSize = 15)]
-        public async Task<IQueryable<ChatEntity>> GetUserChatByChatId([Required] string chatId, [Required] ChatType chatType)
+        public async Task<IQueryable<ChatEntity>> GetUserChatByChatId([Required] string chatId, ChatType? chatType)
         {
             var sessionId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Sid);
             var User = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), sessionId);
             if (User is UserEntity)
             {
                 UserEntity userchat = await _dbContext.GetUserCollection().TryGetUserEntityByUsername(chatId);
-                IQueryable<ChatEntity> query = (await GetUserChats()).Where(o => chatType == o.Type);
                 switch (chatType)
                 {
                     case ChatType.Regular:
                         if (userchat is UserEntity)
                         {
-                            return query.Where(o => userchat.Id != User.Id && o.Participants.Contains(DbRefFactory.UserRef(userchat.Id)));
+                            return (await GetUserChats()).Where(o => chatType == o.Type).Where(o => userchat.Id != User.Id && o.Participants.Contains(DbRefFactory.UserRef(userchat.Id)));
                         }
                         else return Enumerable.Empty<ChatEntity>().AsQueryable();
 
                     case ChatType.Group:
-                        try
-                        {
-                            //var tryConvert = Convert.ToUInt64(chatId);
-                            return query.Where(o => o.ChatId == chatId/*tryConvert*/);
-                        }
-                        catch (FormatException) { return Enumerable.Empty<ChatEntity>().AsQueryable(); }
-                        catch (OverflowException) { return Enumerable.Empty<ChatEntity>().AsQueryable(); }
+                        return (await GetUserChats()).Where(o => chatType == o.Type).Where(o => o.ChatId == chatId);
 
                     default:
-                        return Enumerable.Empty<ChatEntity>().AsQueryable();
+                        if (userchat is UserEntity) return (await GetUserChats()).Where(o => o.Type == ChatType.Regular).Where(o => userchat.Id != User.Id && o.Participants.Contains(DbRefFactory.UserRef(userchat.Id))); // if chatId is a user
+                        return (await GetUserChats()).Where(o => o.ChatId == chatId && o.Type == ChatType.Group); // if chatId is a group
                 }
             }
             else
