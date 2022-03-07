@@ -28,10 +28,7 @@ namespace TextAppApi.Middlewares
                     await _next(context);
                 }
             }
-            catch
-            {
-                context.Abort();
-            }
+            catch { }
         }
     }
 }

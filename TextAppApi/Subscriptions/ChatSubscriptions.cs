@@ -26,6 +26,8 @@ namespace TextAppApi.Subscriptions
         {
             try
             {
+                if (_httpContextAccessor.HttpContext == null)
+                    throw new ApplicationException("HttpContext null");
                 var sessionId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Sid);
                 var User = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), sessionId);
                 if (User is UserEntity)

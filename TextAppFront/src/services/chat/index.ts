@@ -70,8 +70,6 @@ export class Chat {
     constructor(notify: NotifyService, apollo: Apollo) {
         this.apollo = apollo;
         makeAutoObservable(this);
-
-        this.apollo.instance.query({query: SUBSCRIBE_LISTEN_MESSAGES});
     }
 
     registerListenMessages() {

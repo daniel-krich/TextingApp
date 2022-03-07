@@ -81,10 +81,10 @@ const link = (jwt: string | undefined = undefined) => split(
 
 const defaultOptions: DefaultOptions = {
     watchQuery: {
-        fetchPolicy: 'network-only'
+        fetchPolicy: 'no-cache'
     },
     query: {
-        fetchPolicy: 'network-only'
+        fetchPolicy: 'no-cache'
     }
 }
 
