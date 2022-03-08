@@ -11,9 +11,10 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using TextAppApi.Core;
 using TextAppData.DataContext;
+using TextAppData.Factories;
 using TextAppData.DataEntities;
 using TextAppData.Enums;
-using TextAppData.Helpers;
+using TextAppData.Extensions;
 
 namespace TextAppApi.Queries
 {

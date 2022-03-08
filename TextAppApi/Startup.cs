@@ -26,6 +26,8 @@ using HotChocolate.Execution.Configuration;
 using TextAppApi.ErrorFilter;
 using TextAppApi.Subscriptions;
 using TextAppApi.Middlewares;
+using Microsoft.AspNetCore.ResponseCompression;
+using System.IO.Compression;
 
 namespace TextAppApi
 {
@@ -95,6 +97,23 @@ namespace TextAppApi
                     }
                 });
             });
+            services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = true;
+                options.Providers.Add<BrotliCompressionProvider>();
+                options.Providers.Add<GzipCompressionProvider>();
+            });
+
+            services.Configure<BrotliCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.Fastest;
+            });
+
+            services.Configure<GzipCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.Fastest;
+            });
+
             services.AddHttpContextAccessor();
             services.AddGraphQLServer()
                 .AddSocketSessionInterceptor<SubscriptionAuthMiddleware>()
@@ -122,6 +141,7 @@ namespace TextAppApi
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "TextAppApi v1"));
             }
+            app.UseResponseCompression();
 
             app.UseHttpsRedirection();
 

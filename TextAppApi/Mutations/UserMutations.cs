@@ -6,13 +6,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using TextAppData.Converters;
 using TextAppData.DataEntities;
-using TextAppData.Models;
+using TextAppData.DTOs.Request;
+using TextAppData.DTOs.Response;
 
 namespace TextAppApi.Mutations
 {
     public partial class DbMutations
     {
-        public async Task<UserEntity> CreateUser(CreateUserModel createUser)
+        public async Task<UserEntity> CreateUser(CreateUserDto createUser)
         {
             if (ModelValidator.Validate(createUser))
             {

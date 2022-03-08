@@ -14,13 +14,13 @@ namespace TextAppData.DataContext
     {
         private IMongoClient _connection;
         private IMongoDatabase _database;
-        public static string Host { get => "127.0.0.1"; }
-        public static int Port { get => 27017; }
-        public static string DbName { get => "textapp_db"; }
-        public static string UserCollection { get => "users_col"; }
-        public static string ChatCollection { get => "chats_col"; }
-        public static string MessageCollection { get => "messages_col"; }
-        public static string SessionCollection { get => "session_col"; }
+        public const string Host                = "127.0.0.1";
+        public const int Port                   = 27017;
+        public const string DbName              = "textapp_db";
+        public const string UserCollection      = "users_col";
+        public const string ChatCollection      = "chats_col";
+        public const string MessageCollection   = "messages_col";
+        public const string SessionCollection   = "session_col";
 
         public DbContext()
         {

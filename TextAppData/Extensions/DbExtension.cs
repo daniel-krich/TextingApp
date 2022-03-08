@@ -5,12 +5,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TextAppData.DataContext;
+using TextAppData.Factories;
 using TextAppData.DataEntities;
 
-namespace TextAppData.Helpers
+namespace TextAppData.Extensions
 {
-    public static class DbHelper
+    public static class DbExtension
     {
         public static async Task<string> CreateSessionId(this IMongoCollection<SessionEntity> session, UserEntity user)
         {

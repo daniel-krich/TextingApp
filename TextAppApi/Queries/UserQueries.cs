@@ -13,8 +13,9 @@ using TextAppData.Converters;
 using TextAppData.DataContext;
 using TextAppData.DataEntities;
 using TextAppData.Enums;
-using TextAppData.Helpers;
-using TextAppData.Models;
+using TextAppData.Extensions;
+using TextAppData.DTOs.Request;
+using TextAppData.DTOs.Response;
 
 namespace TextAppApi.Queries
 {
@@ -35,7 +36,7 @@ namespace TextAppApi.Queries
             }
         }
 
-        public async Task<string> Login(LoginModel login)
+        public async Task<string> Login(LoginDto login)
         {
             if (ModelValidator.Validate(login))
             {

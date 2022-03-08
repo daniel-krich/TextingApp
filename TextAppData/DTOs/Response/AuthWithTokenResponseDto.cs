@@ -5,11 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TextAppData.ResponseModels
+namespace TextAppData.DTOs.Response
 {
-    public class UserResponseModel
+    public class AuthWithTokenResponseDto
     {
         public string Username { get; set; }
+        public string Email { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
 

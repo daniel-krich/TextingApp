@@ -15,7 +15,7 @@ using TextAppApi.Authentication;
 using TextAppApi.Core;
 using TextAppData.DataContext;
 using TextAppData.DataEntities;
-using TextAppData.Helpers;
+using TextAppData.Extensions;
 
 namespace TextAppApi.Subscriptions
 {

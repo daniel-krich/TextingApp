@@ -11,11 +11,12 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using TextAppApi.Core;
 using TextAppData.DataContext;
+using TextAppData.Factories;
 using TextAppData.DataEntities;
 using TextAppData.Enums;
-using TextAppData.Helpers;
-using TextAppData.Models;
-using TextAppData.ResponseModels;
+using TextAppData.Extensions;
+using TextAppData.DTOs.Request;
+using TextAppData.DTOs.Response;
 
 namespace TextAppApi.Controllers
 {
@@ -32,7 +33,7 @@ namespace TextAppApi.Controllers
 
         [HttpPost("push")]
         [Authorize]
-        public async Task<string> PushMessage([FromBody] PushMessageModel message)
+        public async Task<string> PushMessage([FromBody] PushMessageDto message)
         {
             var res = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), this.User.FindFirstValue(ClaimTypes.Sid));
             if (res is UserEntity user)
@@ -59,7 +60,7 @@ namespace TextAppApi.Controllers
                                 await _dbContext.GetChatCollection().UpdateOneAsync(c => c.Id == chat.Id,
                                     Builders<ChatEntity>.Update.AddToSet(o => o.Messages, DbRefFactory.MessageRef(currentMessage.Id)));
                                 EventStream<MessageEvent>.CallEvent(new MessageEvent { Message = currentMessage, Chat = chat });
-                                return new ResponseModel("Success", "Message sent successfully").ToString();
+                                return new ResponseDto("Success", "Message sent successfully").ToString();
                             }
                             else
                             {
@@ -77,12 +78,12 @@ namespace TextAppApi.Controllers
                                 };
                                 await _dbContext.GetChatCollection().InsertOneAsync(currentChat);
                                 EventStream<MessageEvent>.CallEvent(new MessageEvent { Message = currentMessage, Chat = currentChat });
-                                return new ResponseModel("Success", "New chat has been created, message sent successfully").ToString();
+                                return new ResponseDto("Success", "New chat has been created, message sent successfully").ToString();
                             }
                         }
                         else
                         {
-                            return new ResponseModel(21, "Message error", "Couldn't find chat or user to send to.").ToString();
+                            return new ResponseDto(21, "Message error", "Couldn't find chat or user to send to.").ToString();
                         }
                     }
                     else if(message.TypeChat == ChatType.Group)
@@ -104,39 +105,39 @@ namespace TextAppApi.Controllers
                                 await _dbContext.GetChatCollection().UpdateOneAsync(c => c.Id == chat.Id,
                                     Builders<ChatEntity>.Update.AddToSet(o => o.Messages, DbRefFactory.MessageRef(currentMessage.Id)));
                                 EventStream<MessageEvent>.CallEvent(new MessageEvent { Message = currentMessage, Chat = chat });
-                                return new ResponseModel("Success", "Message sent successfully").ToString();
+                                return new ResponseDto("Success", "Message sent successfully").ToString();
                             }
                             else
                             {
-                                return new ResponseModel(24, "Message error", "Couldn't find chat or user to send to.").ToString();
+                                return new ResponseDto(24, "Message error", "Couldn't find chat or user to send to.").ToString();
                             }
                         }
                         catch(OverflowException)
                         {
-                            return new ResponseModel(22, "Id error", "Provided invalid Id").ToString();
+                            return new ResponseDto(22, "Id error", "Provided invalid Id").ToString();
                         }
                         catch(FormatException)
                         {
-                            return new ResponseModel(23, "Id error", "Provided invalid Id").ToString();
+                            return new ResponseDto(23, "Id error", "Provided invalid Id").ToString();
                         }
                         catch(Exception)
                         {
-                            return new ResponseModel(0, "Unknown error", "Error occured on push message.").ToString();
+                            return new ResponseDto(0, "Unknown error", "Error occured on push message.").ToString();
                         }
                     }
                     else
                     {
-                        return new ResponseModel(21, "Message error", "Couldn't find chat or user to send to.").ToString();
+                        return new ResponseDto(21, "Message error", "Couldn't find chat or user to send to.").ToString();
                     }
                 }
                 else
                 {
-                    return new ResponseModel(23, "Id error", "Provided invalid Id").ToString();
+                    return new ResponseDto(23, "Id error", "Provided invalid Id").ToString();
                 }
             }
             else
             {
-                return new ResponseModel(21, "Message error", "Provided invalid token").ToString();
+                return new ResponseDto(21, "Message error", "Provided invalid token").ToString();
             }
         }
 
@@ -156,13 +157,13 @@ namespace TextAppApi.Controllers
                     {
                         // Create output json with last message and sender basic info
                         var userFromRef_unsafe = await _dbContext.GetUserCollection().FetchDBRefAsAsync(messageEvent.Message.Sender); // contains passwords etc!
-                        UserResponseModel userResponse = new UserResponseModel
+                        UserResponseDto userResponse = new UserResponseDto
                         {
                             Username = userFromRef_unsafe.Username,
                             FirstName = userFromRef_unsafe.FirstName,
                             LastName = userFromRef_unsafe.LastName
                         };
-                        MessageResponseModel message = new MessageResponseModel
+                        MessageResponseDto message = new MessageResponseDto
                         {
                             Sender = userResponse,
                             Time = messageEvent.Message.Time,
@@ -172,10 +173,10 @@ namespace TextAppApi.Controllers
 
                         // Create output json list with participants basic information
                         var participants_unsafe = await _dbContext.GetUserCollection().FetchDBRefAsAsync(messageEvent.Chat.Participants); // contains passwords etc!
-                        List<UserResponseModel> participants_filtered = new List<UserResponseModel>();
+                        List<UserResponseDto> participants_filtered = new List<UserResponseDto>();
                         foreach (UserEntity userCurr in participants_unsafe)
                         {
-                            participants_filtered.Add(new UserResponseModel
+                            participants_filtered.Add(new UserResponseDto
                             {
                                 Username = userCurr.Username,
                                 FirstName = userCurr.FirstName,
@@ -191,7 +192,7 @@ namespace TextAppApi.Controllers
                              where part.Username != user.Username
                              select part).FirstOrDefault()?.Username : messageEvent.Chat.ChatId.ToString();
 
-                        ChatResponseModel responseChat = new ChatResponseModel
+                        ChatResponseDto responseChat = new ChatResponseDto
                         {
                             ChatId = chatId ?? user.Username, // if chatId is null, the user sent the message to himself.
                             Name = messageEvent.Chat.Name,

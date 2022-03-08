@@ -10,17 +10,19 @@ using System.Threading.Tasks;
 using TextAppApi.Subscriptions;
 using TextAppData.Converters;
 using TextAppData.DataContext;
+using TextAppData.Factories;
 using TextAppData.DataEntities;
 using TextAppData.Enums;
-using TextAppData.Helpers;
-using TextAppData.Models;
+using TextAppData.Extensions;
+using TextAppData.DTOs.Request;
+using TextAppData.DTOs.Response;
 
 namespace TextAppApi.Mutations
 {
     public partial class DbMutations
     {
         [Authorize]
-        public async Task<ChatEntity> AddMessageToChat(PushMessageModel message)
+        public async Task<ChatEntity> AddMessageToChat(PushMessageDto message)
         {
             if (ModelValidator.Validate(message))
             {

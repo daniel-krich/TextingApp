@@ -6,11 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 using TextAppData.Enums;
 
-namespace TextAppData.Models
+namespace TextAppData.DTOs.Request
 {
-    public class GetChatContactModel
+    public class SearchUsersDto
     {
         [Required]
-        public string ChatId { get; set; }
+        public string Query { get; set; }
     }
 }

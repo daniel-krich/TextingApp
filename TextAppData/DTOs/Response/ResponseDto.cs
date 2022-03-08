@@ -5,15 +5,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TextAppData.ResponseModels
+namespace TextAppData.DTOs.Response
 {
-    public class ResponseModel
+    public class ResponseDto
     {
         public int? ErrorId { get; set; }
         public string Header { get; set; }
         public string Comment { get; set; }
 
-        public ResponseModel(int errorId, string error_header, string comment)
+        public ResponseDto(int errorId, string error_header, string comment)
         {
             ErrorId = errorId;
             Header = error_header;
@@ -21,7 +21,7 @@ namespace TextAppData.ResponseModels
         }
 
 
-        public ResponseModel(string success_header, string comment)
+        public ResponseDto(string success_header, string comment)
         {
             Header = success_header;
             Comment = comment;

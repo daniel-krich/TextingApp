@@ -6,13 +6,13 @@ using System.Text;
 using System.Threading.Tasks;
 using TextAppData.Enums;
 
-namespace TextAppData.ResponseModels
+namespace TextAppData.DTOs.Response
 {
-    public class ChatMessagesResponseModel
+    public class ChatMessagesResponseDto
     {
         public string ChatId { get; set; }
         public ChatType Type { get; set; }
-        public IList<MessageResponseModel> Messages { get; set; }
+        public IList<MessageResponseDto> Messages { get; set; }
 
         public override string ToString()
         {

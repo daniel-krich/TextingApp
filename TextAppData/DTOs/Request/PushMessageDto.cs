@@ -6,15 +6,15 @@ using System.Text;
 using System.Threading.Tasks;
 using TextAppData.Enums;
 
-namespace TextAppData.Models
+namespace TextAppData.DTOs.Request
 {
-    public class GetChatMessagesModel
+    public class PushMessageDto
     {
         [Required]
         public string ChatId { get; set; }
         [Required]
         public ChatType TypeChat { get; set; }
         [Required]
-        public int MessageOffset { get; set; }
+        public string Message { get; set; }
     }
 }

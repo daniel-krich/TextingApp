@@ -14,9 +14,9 @@ using TextAppApi.Authentication;
 using TextAppData.Converters;
 using TextAppData.DataContext;
 using TextAppData.DataEntities;
-using TextAppData.Helpers;
-using TextAppData.Models;
-using TextAppData.ResponseModels;
+using TextAppData.Extensions;
+using TextAppData.DTOs.Request;
+using TextAppData.DTOs.Response;
 
 namespace TextAppApi.Controllers
 {
@@ -39,16 +39,16 @@ namespace TextAppApi.Controllers
             var res = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), this.User.FindFirstValue(ClaimTypes.Sid));
             if (res is UserEntity model)
             {
-                return ModelConverter.Convert<AuthWithTokenResponseModel>(model).ToString();
+                return ModelConverter.Convert<AuthWithTokenResponseDto>(model).ToString();
             }
             else
             {
-                return new ResponseModel(1, "Authentication error", "Invalid token").ToString();
+                return new ResponseDto(1, "Authentication error", "Invalid token").ToString();
             }
         }
 
         [HttpPost("login")]
-        public async Task<string> AuthByUsernamePass([FromBody] LoginModel user)
+        public async Task<string> AuthByUsernamePass([FromBody] LoginDto user)
         {
             var res = await _dbContext.GetUserCollection().TryGetUserEntityByCredentials(user.Username, user.Password);
             if (res is UserEntity model)
@@ -60,45 +60,45 @@ namespace TextAppApi.Controllers
                     new Claim(ClaimTypes.Sid, sessionId)
                 });
 
-                return new AuthResponseModel { AccessToken = accessToken }.ToString();
+                return new AuthResponseDto { AccessToken = accessToken }.ToString();
             }
             else
             {
-                return new ResponseModel(1, "Authentication error", "Invalid username or password").ToString();
+                return new ResponseDto(1, "Authentication error", "Invalid username or password").ToString();
             }
         }
 
 
         [HttpPost("register")]
-        public async Task<string> CreateUser([FromBody] CreateUserModel user)
+        public async Task<string> CreateUser([FromBody] CreateUserDto user)
         {
             try
             {
                 await _dbContext.GetUserCollection().InsertOneAsync(ModelConverter.Convert<UserEntity>(user));
-                return new ResponseModel("Success", "Account has been created").ToString();
+                return new ResponseDto("Success", "Account has been created").ToString();
             }
             catch(MongoWriteException)
             {
-                return new ResponseModel(2, "Signup error", "Couldn't insert a new account, some of the data exists already.").ToString();
+                return new ResponseDto(2, "Signup error", "Couldn't insert a new account, some of the data exists already.").ToString();
             }
             catch(Exception)
             {
-                return new ResponseModel(0, "Unknown error", "Error occured on create user.").ToString();
+                return new ResponseDto(0, "Unknown error", "Error occured on create user.").ToString();
             }
         }
 
         [HttpPost("search")]
         [Authorize]
-        public async Task<string> SearchUsers([FromBody] SearchUsersModel search)
+        public async Task<string> SearchUsers([FromBody] SearchUsersDto search)
         {
 
             var res = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), this.User.FindFirstValue(ClaimTypes.Sid));
             if (res is UserEntity user)
             {
                 var usersResult = (await _dbContext.GetUserCollection().FindAsync(o => o.Username.ToLower().Contains(search.Query.ToLower()) || o.FirstName.ToLower().Contains(search.Query.ToLower()) || o.LastName.ToLower().Contains(search.Query.ToLower()))).ToEnumerable().Take(50);
-                IList<UserResponseModel> responseUsers = new List<UserResponseModel>();
+                IList<UserResponseDto> responseUsers = new List<UserResponseDto>();
                 foreach (UserEntity userFromDb in usersResult)
-                    responseUsers.Add(new UserResponseModel {
+                    responseUsers.Add(new UserResponseDto {
                         Username = userFromDb.Username,
                         FirstName = userFromDb.FirstName,
                         LastName = userFromDb.LastName
@@ -107,13 +107,13 @@ namespace TextAppApi.Controllers
             }
             else
             {
-                return new ResponseModel(1, "Search error", "Provided invalid token.").ToString();
+                return new ResponseDto(1, "Search error", "Provided invalid token.").ToString();
             }
         }
 
         [HttpPost("find")]
         [Authorize]
-        public async Task<string> FindUser([FromBody] SearchUsersModel search)
+        public async Task<string> FindUser([FromBody] SearchUsersDto search)
         {
 
             var res = await _dbContext.GetSessionCollection().TryGetUserEntityBySessionId(_dbContext.GetUserCollection(), this.User.FindFirstValue(ClaimTypes.Sid));
@@ -122,7 +122,7 @@ namespace TextAppApi.Controllers
                 var userRes = await _dbContext.GetUserCollection().TryGetUserEntityByUsername(search.Query);
                 if (userRes is UserEntity foundUser)
                 {
-                    UserResponseModel userResponseModel = new UserResponseModel()
+                    UserResponseDto userResponseModel = new UserResponseDto()
                     {
                         Username = foundUser.Username,
                         FirstName = foundUser.FirstName,
@@ -132,12 +132,12 @@ namespace TextAppApi.Controllers
                 }
                 else
                 {
-                    return new ResponseModel(1, "Search error", "Provided invalid username.").ToString();
+                    return new ResponseDto(1, "Search error", "Provided invalid username.").ToString();
                 }
             }
             else
             {
-                return new ResponseModel(1, "Search error", "Provided invalid token.").ToString();
+                return new ResponseDto(1, "Search error", "Provided invalid token.").ToString();
             }
         }
     }

@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 using TextAppData.DataContext;
 using TextAppData.DataEntities;
 using TextAppData.Enums;
-using TextAppData.Helpers;
+using TextAppData.Extensions;
 
 namespace TextAppApi.QueryResolvers
 {

@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TextAppData.ResponseModels
+namespace TextAppData.DTOs.Response
 {
-    public class AuthResponseModel
+    public class AuthResponseDto
     {
         public string AccessToken { get; set; }
 

@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TextAppData.ResponseModels
+namespace TextAppData.DTOs.Response
 {
-    public class MessageResponseModel
+    public class MessageResponseDto
     {
-        public UserResponseModel Sender { get; set; }
+        public UserResponseDto Sender { get; set; }
         public string Message { get; set; }
         public DateTime Time { get; set; }
 
