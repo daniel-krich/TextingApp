@@ -1,19 +1,27 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Container, Navbar, Nav, NavDropdown, Dropdown, Form, Row, Col, Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './navbar.css';
-import { useGlobalStore, TokenStore } from '../../services';
-import { SearchBoxModel } from './navbarSearchModel';
+import { useGlobalStore, TokenStore, SEARCH_USER_BY_NAME } from '../../services';
+import { SearchBoxModel, User } from './navbarSearchModel';
 import { runInAction } from 'mobx';
 import { observer } from 'mobx-react';
 
 export const NavBar = observer(() => {
     const navigation = useNavigate();
+    const abortController = useRef(undefined as AbortController | undefined);
     const globalStore = useGlobalStore();
-    const onSearchChange = function(e: React.ChangeEvent<HTMLInputElement>) {
+    const apolloInstance = globalStore.apolloService.instance;
+    const onSearchChange = async function(e: React.ChangeEvent<HTMLInputElement>) {
+        abortController.current?.abort();
         runInAction(() => SearchBoxModel.searchText = e.target.value);
-        SearchBoxModel.searchForUsers();
+        if(SearchBoxModel.searchText.length > 0) {
+            const controller = new window.AbortController();
+            abortController.current = controller;
+            const queryResponse = (await apolloInstance.query({query: SEARCH_USER_BY_NAME, variables: {username: SearchBoxModel.searchText, exact: false}, context: { fetchOptions: { signal: controller.signal } }})).data["searchUser"] as {items: User[]};
+            runInAction(() => SearchBoxModel.searchUsers = queryResponse.items);
+        }
     };
     const logout = () => {
         TokenStore.clearTokens();
@@ -65,7 +73,7 @@ export const NavBar = observer(() => {
                                                     
                                                     {
                                                         SearchBoxModel.searchUsers.map((user, index) =>
-                                                            <Dropdown.Item onClick={() => navigation('/profile/' + user.Username)} key={index}>{user.FirstName + ' ' + user.LastName}</Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => navigation('/profile/' + user.username)} key={index}>{user.firstName + ' ' + user.lastName}</Dropdown.Item>
                                                         )
                                                     }
                                                 </>

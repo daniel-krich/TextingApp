@@ -12,6 +12,7 @@
     "@types/react": "^17.0.39",
     "@types/react-dom": "^17.0.11",
     "bootstrap": "^5.1.3",
+    "cross-env": "^7.0.3",
     "graphql": "^16.3.0",
     "graphql-ws": "^5.6.2",
     "mobx": "^6.3.13",
@@ -28,6 +29,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "pbuild": "cross-env BUILD_PATH='../TextAppApi/wwwroot' react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -52,6 +54,6 @@
   "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
   "main": "index.tsx",
   "devDependencies": {},
-  "author": "",
+  "author": "daniel krichevsky",
   "license": "ISC"
 }

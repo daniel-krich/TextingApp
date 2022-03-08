@@ -81,10 +81,10 @@ const link = (jwt: string | undefined = undefined) => split(
 
 const defaultOptions: DefaultOptions = {
     watchQuery: {
-        fetchPolicy: 'no-cache'
+        fetchPolicy: 'network-only'
     },
     query: {
-        fetchPolicy: 'no-cache'
+        fetchPolicy: 'network-only'
     }
 }
 
@@ -92,7 +92,8 @@ function createApolloClient(jwt: string | undefined = undefined): ApolloClient<N
     return new ApolloClient({
         link: link(jwt),
         cache: new InMemoryCache(),
-        defaultOptions: defaultOptions
+        defaultOptions: defaultOptions,
+        queryDeduplication: false
     });
 }
 
