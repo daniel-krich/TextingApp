@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { Home, Profile, Login, Inbox, Register } from './screens';
+import { Home, Profile, Login, Inbox, Register } from './pages';
 import { useGlobalStore } from "./services";
 
 export default function ContentRouter(props: any) {
