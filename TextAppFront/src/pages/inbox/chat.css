@@ -43,6 +43,21 @@
     overflow-anchor: none;
 }
 
+.chat-bubble-self {
+    background-color: #cce6ff;
+    border: 1px solid #21212130 !important;
+    border-radius: 15px 15px 15px 0px !important;
+    margin: 10px;
+    align-self: flex-start;
+}
+
+.chat-bubble-foreign {
+    border: 1px solid #21212130 !important;
+    border-radius: 15px 15px 0px 15px !important;
+    margin: 10px;
+    align-self: flex-end;
+}
+
 .chat-box-input {
     border: 1px solid #21212130;
     border-radius: 5px;

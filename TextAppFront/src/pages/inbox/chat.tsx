@@ -10,6 +10,25 @@ import { ChatStruct, ChatType, MessageStruct, ResponseListenMessages, UserChatSt
 import { ChatModel } from './chatModel';
 import { ApolloError } from '@apollo/client';
 
+function ParseTimeOffset(time: Date): string{
+    const timeOffsetSeconds = (new Date().getTime() - time.getTime()) / 1000;
+    if(timeOffsetSeconds >= 86400) { // days
+        return `${Math.round(timeOffsetSeconds/86400)}d`;
+    }
+    else if(timeOffsetSeconds >= 3600) { // hours
+        return `${Math.round(timeOffsetSeconds/3600)}h`;
+    }
+    else if(timeOffsetSeconds > 60) { // mins
+        return `${Math.round(timeOffsetSeconds/60)}m`;
+    }
+    else if(timeOffsetSeconds >= 1) { // secs
+        return `${Math.round(timeOffsetSeconds)}s`;
+    }
+    else {
+        return "Now";
+    }
+}
+
 export const Chat = observer(() => {
     const { chatId } = useParams();
     const navigate = useNavigate();
@@ -124,14 +143,12 @@ export const Chat = observer(() => {
         <>
             
             <Container>
-                <Row className='p-3 bg-white'>
-                    <Col md={2}><h6 role="button" onClick={() => navigate('/inbox')} className='text-center display-4 text-black'>Back</h6></Col>
-                    <Col md={8}><h6 className='text-center display-4 text-black'>
+                <Row className='p-3 bg-white align-items-center'>
+                    <Col md={4}> <Button onClick={() => navigate('/inbox')} variant="primary" size="lg">Back</Button> </Col>
+                    <Col><h6 className='display-4 text-black'>
                     {
                         loadingChats ?
-                        (<Spinner animation="grow" variant="dark">
-                                <span className="visually-hidden">Loading...</span>
-                        </Spinner>)
+                        <></>
                         :
                         (ChatModel.currentChatType == ChatType.Regular ? ChatModel.chatPartner?.firstName + ' ' + ChatModel.chatPartner?.lastName : ChatModel.currentChat?.name)
                         ??
@@ -151,11 +168,14 @@ export const Chat = observer(() => {
                     :
                     (<ListGroup as="ol" className='p-0 flex-column-reverse'>
                         {ChatModel.currentChat?.messages?.items?.map((o, index) => 
-                            <ListGroup.Item key={index} as="div" className='border-0'>
-                            <div className={`ms-2 me-auto ${o.sender.username == user.username ? 'text-start' : 'text-end'}`}>
-                            <div className="fw-bold">{o.sender.firstName} {o.sender.lastName} ({new Date(o.time).toLocaleDateString()})</div>
+                            <ListGroup.Item key={index} as="div" className={`d-flex ${o.sender.username == user.username ? 'chat-bubble-self' : 'chat-bubble-foreign'}`}>
+                            <Container className='ms-2 me-auto'>
+                            <Row className='mb-2'>
+                                <Col className='fw-bold text-nowrap'>{o.sender.firstName} {o.sender.lastName}</Col>
+                                <Col className='fw-light text-muted'>{ParseTimeOffset(new Date(o.time))}</Col>
+                            </Row>
                             {o.message}
-                            </div>
+                            </Container>
                             </ListGroup.Item>)
                         ??
                             <Alert className='mb-0 rounded-0' variant="secondary">
