@@ -7,3 +7,4 @@ export * from './const';
 export * from './auth';
 export * from './notifications';
 export * from './apolloClient';
+export * from './Common/Utils';

@@ -5,33 +5,15 @@ import { runInAction } from 'mobx';
 import { useParams, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './chat.css';
-import { useGlobalStore } from '../../services';
+import { useGlobalStore, Utils } from '../../services';
 import { ChatStruct, ChatType, MessageStruct, ResponseListenMessages, UserChatStruct } from '../../services/chat';
 import { ChatModel } from './chatModel';
 import { ApolloError } from '@apollo/client';
 
-function ParseTimeOffset(time: Date): string{
-    const timeOffsetSeconds = (new Date().getTime() - time.getTime()) / 1000;
-    if(timeOffsetSeconds >= 86400) { // days
-        return `${Math.round(timeOffsetSeconds/86400)}d`;
-    }
-    else if(timeOffsetSeconds >= 3600) { // hours
-        return `${Math.round(timeOffsetSeconds/3600)}h`;
-    }
-    else if(timeOffsetSeconds > 60) { // mins
-        return `${Math.round(timeOffsetSeconds/60)}m`;
-    }
-    else if(timeOffsetSeconds >= 1) { // secs
-        return `${Math.round(timeOffsetSeconds)}s`;
-    }
-    else {
-        return "Now";
-    }
-}
-
 export const Chat = observer(() => {
     const { chatId } = useParams();
     const navigate = useNavigate();
+    const [currentTime, setCurrentTime] = useState(new Date());
     const [loadingChats, setLoadingChats] = useState(true);
     const [dontRenderChunks, setDontRenderChunks] = useState(false);
     const chatService = useGlobalStore().chatService;
@@ -110,6 +92,7 @@ export const Chat = observer(() => {
         let isActive = true;
         function ProcessChatUpdates(e: ResponseListenMessages) {
             if(e.data.listenChatUpdates.chatId == chatId) {
+                setCurrentTime(new Date()); // update chat date.
                 runInAction(() => {
                     if(ChatModel.currentChat) {
                         if(ChatModel.currentChat.messages.items == undefined) {
@@ -172,7 +155,7 @@ export const Chat = observer(() => {
                             <Container className='ms-2 me-auto'>
                             <Row className='mb-2'>
                                 <Col className='fw-bold text-nowrap'>{o.sender.firstName} {o.sender.lastName}</Col>
-                                <Col className='fw-light text-muted'>{ParseTimeOffset(new Date(o.time))}</Col>
+                                <Col className='fw-light text-muted'>{Utils.ParseTimeOffset(currentTime, new Date(o.time))}</Col>
                             </Row>
                             {o.message}
                             </Container>
@@ -199,7 +182,7 @@ export const Chat = observer(() => {
                         placeholder="Enter your message..."
                         aria-describedby="send-message-btn"
                         />
-                        <Button type="submit" variant="outline-success" id="send-message-btn">
+                        <Button className='ms-1' type="submit" variant="outline-success" id="send-message-btn">
                         Send
                         </Button>
                     </Form.Group>
