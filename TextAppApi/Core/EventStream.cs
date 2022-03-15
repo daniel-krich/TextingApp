@@ -45,8 +45,6 @@ namespace TextAppApi.Core
             return this._data;
         }
 
-        //
-
         public static void CallEvent(T long_event)
         {
             lock(LongPollingQueue)
