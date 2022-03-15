@@ -12,7 +12,7 @@ namespace TextAppApi.Authentication
 {
     public class TokenService : ITokenService
     {
-        public const string TokenKey = "superSecretKey@345";
+        public const string TokenKey = "W1pV@I!fgSHG54Vn2D$JCsTfvW08ZzSCjQhY4MfQ31UblqsUZ!";
         public const string IssuerAddr = "http://localhost:44310";
         public const string AudienceAddr = "http://localhost:3000";
         public string GenerateAccessToken(IEnumerable<Claim> claims)
