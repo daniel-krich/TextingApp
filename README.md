@@ -1,9 +1,9 @@
 # Texting App
 
-A working prototype of a "social network" style application.
+A working unfinished project of a "social network" style application.
 
 Using C# .NET WebApi with MongoDB, GraphQL as backend.<br/>
-Using React with mobX, ApolloClient as frontend.
+Using React with mobX as frontend.
 
 Chats update in real-time via subscriptions to GraphQL over ws.
 
