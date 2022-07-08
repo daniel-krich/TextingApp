@@ -1,13 +1,22 @@
 # Texting App
 
-A working unfinished project of a "social network" style application.
+Chat application project.
 
-Using C# .NET WebApi with MongoDB, GraphQL as backend.<br/>
-Using React with mobX as frontend.
+Using C# .NET WebApi with MongoDB, GraphQL (Back).<br/>
+Using React (Front).
 
 Chats update in real-time via subscriptions to GraphQL over ws.
 
-![txtapp1](https://user-images.githubusercontent.com/87533517/158374503-a1c0946d-38b2-4cbc-9ce6-93b6082914ff.png)
-![txtapp4](https://user-images.githubusercontent.com/87533517/158374567-a1f1354e-2714-4822-b638-180aaac3aba3.png)
-![txtapp5](https://user-images.githubusercontent.com/87533517/158374817-71211422-6792-457b-9f7c-77abbd1ce2b9.png)
-![txtapp6](https://user-images.githubusercontent.com/87533517/158374827-3bc8b1ee-4747-40c4-a557-1fd32ab27b8b.png)
+### Screenshots
+***
+![s1](https://user-images.githubusercontent.com/87533517/178073687-adcec5f6-fed3-4d8d-9575-72e75b1d1b48.PNG)
+***
+![s2](https://user-images.githubusercontent.com/87533517/178073676-07ee1777-8cf7-4d37-8df6-04c63d96bd09.PNG)
+***
+![s3](https://user-images.githubusercontent.com/87533517/178073680-810433a8-74ae-495c-bf34-2025a52ac165.PNG)
+***
+![s4](https://user-images.githubusercontent.com/87533517/178073683-f3ab4e69-7402-4d8e-9be8-b8ea9f20fc10.PNG)
+***
+![s6](https://user-images.githubusercontent.com/87533517/178073996-90b5422b-ca77-4c49-952c-b5a4eef69c2f.PNG)
+***
+![s5](https://user-images.githubusercontent.com/87533517/178073684-fffdf8f3-a287-490a-877b-191927c5a9dd.PNG)
