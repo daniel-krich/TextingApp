@@ -75,6 +75,7 @@ export const Chat = observer(() => {
                         runInAction(() => {
                             ChatModel.chatPartner = search.searchUser.items[0];
                             ChatModel.currentChatType = ChatType.Regular;
+                            ChatModel.currentChat = undefined;
                         });
                     }
                 }
@@ -128,7 +129,7 @@ export const Chat = observer(() => {
             <Container>
                 <Row className='p-3 bg-white align-items-center'>
                     <Col md={4}> <Button onClick={() => navigate('/inbox')} variant="primary" size="lg">Back</Button> </Col>
-                    <Col><h6 className='display-4 text-black'>
+                    <Col><h6 onClick={() => ChatModel.currentChatType == ChatType.Regular && navigate('/profile/' + ChatModel.chatPartner?.username)} role="button" className='display-4 text-black'>
                     {
                         loadingChats ?
                         <></>

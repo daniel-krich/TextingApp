@@ -12,7 +12,9 @@ export const Home = observer(() => {
         globalcontext.isAppLoaded && authService.isLogged ?
         <>
             <NavBar/>
+            {/*
             <Feed/>
+                */}
         </>
         :
         <Navigate to="/login" />

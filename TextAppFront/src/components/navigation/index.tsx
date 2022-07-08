@@ -91,7 +91,7 @@ export const NavBar = observer(() => {
                     {globalStore.authService.isLogged ?
                         <>
                             <NavDropdown title={"Logged as: " + globalStore.authService.account.username} id="collasible-nav-dropdown">
-                                <NavDropdown.Item onClick={() => navigation('/myaccount')}>My account</NavDropdown.Item>
+                                <NavDropdown.Item onClick={() => navigation('/profile')}>Profile</NavDropdown.Item>
                                 <NavDropdown.Item onClick={() => navigation('/settings')}>Settings</NavDropdown.Item>
                                 <NavDropdown.Divider />
                                 <NavDropdown.Item onClick={() => logout()}>Log out</NavDropdown.Item>

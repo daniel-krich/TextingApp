@@ -62,7 +62,11 @@ export const ChatHistory = observer(() => {
                 }
                 else {
                     chatService.loadChat(e.data.listenChatUpdates.chatId, e.data.listenChatUpdates.type).then(o => {
-                        chatHistoryModel.chatsFeed?.unshift(o);
+                        if(!chatHistoryModel.chatsFeed?.find(o => o.chatId == e.data.listenChatUpdates.chatId)) {
+                            runInAction(() => {
+                                chatHistoryModel.chatsFeed?.unshift(o);
+                            });
+                        }
                     });
                 }
             }
